@@ -49,9 +49,9 @@
 
 | 元件 | 寫法 | 外觀 |
 |---|---|---|
-| 出處 | 句末 `（[[來源-AW03C]] p.4）` | 一般內部連結樣式 |
+| 出處 | 句末 `（[[來源-AW03C]] slide 4）` | 一般內部連結樣式 |
 | 原站連結 | 來源頁 Basic info 與各頁 Sources 段的 `原站：<url>` | 外部連結，Quartz 會自動加上箭頭 |
-| 自繪圖 | Mermaid 程式碼區塊；或 `wiki/附圖/` 的 SVG，下一行寫圖說「自繪，依據 [[來源-xxx]] p.N」 | Mermaid 跟著淺色或深色主題切換 |
+| 自繪圖 | Mermaid 程式碼區塊；或 `wiki/附圖/` 的 SVG，下一行寫圖說「自繪，依據 [[來源-xxx]] slide N」 | Mermaid 跟著淺色或深色主題切換 |
 | 非來源內容 | `## Supplementary notes (not from source)` 段落 | 和一般段落相同；靠標題區分 |
 | 引用原文 | `"…"`，每處最多一句，後面接出處 | 一般文字（不用 blockquote，避免看起來像大段轉載） |
 | footer | 課程出處、作者、GitHub repo | 每頁都顯示 |

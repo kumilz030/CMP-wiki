@@ -10,12 +10,13 @@
   結構：frontmatter、type、資料夾、## 標題和範本一致、標題用英文、帶路徑的連結
   概念頁：wiki/概念/UNN/、order:、kind:、每個單元資料夾有 00 UNN concepts.base
   方程式頁：Conditions of validity 不可空白；邏輯鏈：Steps 至少 3 步且每步有連結
-  出處：sources: 與內文一致；[[來源-X]] p.N 的 N 在該來源的講義頁數內；引號原文要真的在那一頁
+  出處：sources: 與內文一致；[[來源-X]] slide N 的 N 在講義投影片數內（不可用 p.N）；引號原文（模糊比對 OCR 文字）要真的在那張投影片
   公開（AGENTS.md §6）：附圖不可是 raw/ 的檔案、引號原文不超過一句、來源頁要有原站 url:、不可有 email
   全庫：壞連結、重複頁名與 aliases、孤兒頁、⚠️待查證清單
 raw/ 不在（例如 GitHub Actions）時，跳過需要 raw/ 的檢查。
 """
 import argparse
+import difflib
 import hashlib
 import re
 import sys
@@ -45,7 +46,8 @@ KINDS = {"theorem", "approximation", "method", "quantity", "concept", "parameter
 
 LINK_RE = re.compile(r"(!?)\[\[([^\]|#]+)(#[^\]|]*)?(\|[^\]]*)?\]\]")
 SRC_LINK_RE = re.compile(r"\[\[(來源-[^\]|#]+)")
-CITE_RE = re.compile(r"\[\[(來源-[^\]|#]+)(?:\|[^\]]*)?\]\]\s*p\.\s?(\d+)(?:\s?[–-]\s?(\d+))?")
+CITE_RE = re.compile(r"\[\[(來源-[^\]|#]+)(?:\|[^\]]*)?\]\]\s*slides?\s?(\d+)(?:\s?[–-]\s?(\d+))?")
+OLD_CITE_RE = re.compile(r"\[\[來源-[^\]]+\]\]\s*p\.\s?\d")
 QUOTE_RE = re.compile(r"[\"“]([A-Za-z][^\"”\n]{15,}?)[\"”]")
 CJK_RE = re.compile(r"[㐀-鿿豈-﫿]")
 EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
@@ -129,42 +131,55 @@ def source_pdfs():
     return out
 
 
-def pdf_pages(stem):
+def slide_numbers(stem):
     d = TEXT / stem
-    return sorted(int(p.stem[1:]) for p in d.glob("p*.txt")) if d.exists() else []
+    return sorted(int(p.stem[1:]) for p in d.glob("s*.txt")) if d.exists() else []
 
 
 def norm(s):
     return re.sub(r"[^a-z0-9]+", " ", s.casefold()).strip()
 
 
+def fuzzy_in(quote, text, cutoff=0.85):
+    """OCR 會認錯字，所以引號原文用模糊比對：在原文裡找同樣字數的片段，相似度 ≥ cutoff 就算有。"""
+    q, t = norm(quote), norm(text)
+    if q in t:
+        return True
+    qw, tw = q.split(), t.split()
+    n = len(qw)
+    for i in range(max(1, len(tw) - n + 1)):
+        if difflib.SequenceMatcher(None, q, " ".join(tw[i:i + n])).ratio() >= cutoff:
+            return True
+    return False
+
+
 # ---------- 單頁檢查 ----------
 
 def check_citations(page, srcmap):
+    """出處格式：（[[來源-AW03C]] slide 2）或 slides 2–4。slide 編號對應來源頁 raw: 的第一份 PDF。"""
     errs = []
-    if not TEXT.exists():
-        return errs
     for ln, line in enumerate(page.body.splitlines(), 1):
+        if OLD_CITE_RE.search(line):
+            errs.append(f"第 {ln} 行：講義出處要寫投影片編號 `slide N`，不寫 `p.N`（AGENTS.md §3-1）")
+        if not TEXT.exists():
+            continue
         for m in CITE_RE.finditer(line):
             src, a = m.group(1), int(m.group(2))
             b = int(m.group(3)) if m.group(3) else a
             stems = srcmap.get(src)
             if not stems:
-                continue  # 沒有講義的來源（例如只有主題頁），無法驗證頁碼
-            avail = set()
-            for s in stems:
-                avail.update(pdf_pages(s))
+                continue  # 沒有講義的來源（例如只有主題頁），無法驗證
+            avail = slide_numbers(stems[0])
             if not avail:
+                continue  # 講義還沒擷取（extract_text.py）
+            if a not in avail or b not in avail or b < a:
+                errs.append(f"第 {ln} 行：[[{src}]] slide {a}{'–' + str(b) if b != a else ''} 超出講義投影片數（1–{max(avail)}）")
                 continue
-            if a not in avail or b not in avail:
-                errs.append(f"第 {ln} 行：[[{src}]] p.{a}{'–' + str(b) if b != a else ''} 超出講義頁數（1–{max(avail)}）")
-                continue
-            # 同一行的引號原文要真的出現在引用的頁
+            # 同一行的引號原文要真的出現在引用的投影片
+            txt = " ".join((TEXT / stems[0] / f"s{n}.txt").read_text(encoding="utf-8") for n in range(a, b + 1))
             for q in QUOTE_RE.finditer(line):
-                txt = " ".join((TEXT / s / f"p{n}.txt").read_text(encoding="utf-8")
-                               for s in stems for n in range(a, b + 1) if (TEXT / s / f"p{n}.txt").exists())
-                if norm(q.group(1)) not in norm(txt):
-                    errs.append(f"第 {ln} 行：引號原文「{q.group(1)[:40]}…」不在 [[{src}]] p.{a}")
+                if not fuzzy_in(q.group(1), txt):
+                    errs.append(f"第 {ln} 行：引號原文「{q.group(1)[:40]}…」不在 [[{src}]] slide {a}")
     return errs
 
 

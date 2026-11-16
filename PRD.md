@@ -70,7 +70,7 @@
 
 ## 7. Acceptance criteria (phase 1)
 
-1. `python3 scripts/lint.py` 0 錯誤：沒有壞連結、重複頁名或孤兒頁，引用的講義頁碼在 `raw/text/` 查得到，`sources:` 與內文一致。
+1. `python3 scripts/lint.py` 0 錯誤：沒有壞連結、重複頁名或孤兒頁，引用的講義投影片編號在 `raw/text/` 查得到，`sources:` 與內文一致。
 2. 兩個單元每個有頁碼代號的主題都有來源頁；每份講義裡**被定義或實質討論**的概念都有歸屬頁。
 3. 每條方程式頁都有「Conditions of validity」。
 4. 公開檢查（lint 執行）：
@@ -92,10 +92,10 @@
 ## 9. Open issues
 
 - [x] 原站有些主題頁抓不到影片：多數是 Elementor 影片元件（網址在 data-settings），`fetch_topic.py` 已能抓到（2026-11-16）。solids as quantum systems、advantages、the Schrödinger equation 仍然是 0 支，匯入時用瀏覽器確認。
-- [ ] **講義是掃描影像**（2026-11-16 檢查 AW02A、AW03C）：每頁 A4 放 3 張投影片，沒有文字層（AW03C 只有 1 頁）。影響：
+- [x] **講義是掃描影像**（2026-11-16 檢查 AW02A、AW03C）：每頁 A4 放 3 張投影片，沒有文字層（AW03C 只有 1 頁）。影響：
   - `raw/text/` 幾乎是空的，lint 的「引號原文在那一頁」檢查會全部判失敗，問答時也無法用 grep 搜講義；
   - `p.N` 的粒度太粗（一頁 3 張投影片）。
-  - 待決定：安裝 OCR（`tesseract-ocr`）產生文字層，以及出處是否改成投影片編號（例如 `slide 5`）。
+  - 決定（2026-11-16）：安裝 `tesseract-ocr`；`extract_text.py` 把講義切成投影片並 OCR；出處改成投影片編號 `slide N`（AGENTS.md §3-1）。
 - [ ] YouTube 字幕下載遇到 HTTP 429（請求過多），是 YouTube 端的限制；之後重抓時放慢，或略過字幕。
 - [ ] 網站網址：用 `kumilz030.github.io/CMP-wiki` 還是自訂網域。
 - [ ] 要不要寫信請作者授權（目前不需要）。

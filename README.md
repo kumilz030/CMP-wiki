@@ -49,7 +49,7 @@ push 到 `main` 後，GitHub Actions（`.github/workflows/deploy.yml`）會：
 - 網站外觀：`DESIGN.md`
 - 原始資料（講義 PDF 等）放在本機的 `raw/`，**不進 git**。需要時用 `python3 scripts/fetch_topic.py` 從原站抓取。
 
-Python 腳本需要 `pyyaml`；抓字幕需要 `yt-dlp`；擷取講義文字需要 `pdftotext`（poppler-utils）。
+Python 腳本需要 `pyyaml`；抓字幕需要 `yt-dlp`；擷取講義文字需要 `pdftotext`（poppler-utils）、`tesseract-ocr`、Pillow 與 numpy（講義多半是掃描影像，要靠 OCR）。
 
 ## Credits
 

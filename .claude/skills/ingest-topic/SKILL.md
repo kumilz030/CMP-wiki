@@ -19,7 +19,7 @@ description: 把 compmatphys.org 的一個主題（頁碼代號如 AW03C）或�
 
 ## 2. Read
 1. 讀 `raw/pages/<slug>.md`：代號、預估時間、影片、講義、表單。
-2. 讀整份講義：先用 `raw/text/<PDF 主幹>/` 找內容，**方程式、符號、表格一律用 Read 看 PDF 該頁的影像**（AGENTS.md §3-10）。
+2. 讀整份講義：先用 `raw/text/<PDF 主幹>/s*.txt`（OCR）找內容與投影片編號，**方程式、符號、表格一律用 Read 看 PDF 該頁的影像，不可從 OCR 文字抄**（AGENTS.md §3-10）。
 3. 有字幕（`raw/subs/`）就讀，但只能當輔助；自動字幕的術語常常聽錯。
 4. 先用 3–5 點跟使用者報告重點，問有沒有要特別強調的（使用者已指定範圍時可省略）。
 
@@ -27,7 +27,7 @@ description: 把 compmatphys.org 的一個主題（頁碼代號如 AW03C）或�
 1. **來源頁** `wiki/來源/來源-<code>.md`（範本 `templates/來源頁.md`）：`url:`、`raw:` 必填；整篇重寫，不往後追加。
 2. **概念頁**：每個新詞先 `python3 scripts/lint.py --find <英文或中文>`，搜到就擴充原頁。新頁放 `wiki/概念/UNN/`，給 `order:`（`"<code>-KK"`）與 `kind:`。
 3. **方程式、推導、邏輯鏈、實作、習題頁**：依 AGENTS.md §2 的條件判斷要不要開頁。
-4. 每個實質說法加出處 `（[[來源-<code>]] p.N）`。**用自己的話寫**，直接引用原文時每處最多一句（AGENTS.md §6）。
+4. 每個實質說法加出處 `（[[來源-<code>]] slide N）`（投影片編號看 `raw/text/<PDF 主幹>/slides.json`）。**用自己的話寫**，直接引用原文時每處最多一句（AGENTS.md §6）。
 5. 需要圖時自己畫（Mermaid 優先），不放講義截圖。
 6. 所有 `#` 標題用英文；內容用繁中說明＋英文術語，術語每頁第一次出現時附中文。
 
