@@ -6,7 +6,7 @@
   p<N>.txt      第 N 頁的全部文字（各投影片接起來）
   slides.json   每張投影片在哪一頁、哪個位置、文字來源（pdftotext 或 OCR）
 
-切投影片：原站講義是 A4 直式、左欄 3 張投影片、右欄筆記線的 handout。用頁面影像找左欄的
+切投影片：只處理檔名含 handouts 的 PDF；其他 PDF 每頁算一個單位。原站講義是 A4 直式、左欄 3 張投影片、右欄筆記線的 handout。用頁面影像找左欄的
 墨水區塊（間隔小於頁高 4% 的區塊合併），每個夠高的區塊算一張投影片。找不到左右欄分隔時，
 整頁算一張（例如橫式投影片 PDF、論文）。
 擷取文字：先用 pdftotext 擷取該區塊；字數太少（掃描影像）或是亂碼（字型編碼壞掉）就用 tesseract OCR。
@@ -71,7 +71,14 @@ def find_slides(img):
             best = runs
             x_border = x
     if best:
-        return [(int(x_border), int(s), int(right - x_border), int(e - s)) for s, e in best]
+        # 右邊界取投影片外框的上緣橫線終點：頁面只剩一張投影片時，投影片內的空白欄
+        # 會被誤認成左右欄的分隔（2026-11-16 AW03F slide 13 被切掉右半）
+        boxes = []
+        for s, e in best:
+            top = dark[s:s + 4, :int(W * 0.75)].any(0)
+            xr = int(np.where(top)[0].max()) + 1 if top.any() else right
+            boxes.append((int(x_border), int(s), max(xr, right) - int(x_border), int(e - s)))
+        return boxes
     rows = dark[:, :right].mean(1) > 0.01
     bands, start, end, gap = [], None, 0, 0
     for y, v in enumerate(rows):
@@ -116,12 +123,17 @@ def ocr_box(img, box, tmp):
 
 def process(pdf, out):
     out.mkdir(parents=True, exist_ok=True)
+    for old in list(out.glob("s*.txt")) + list(out.glob("p*.txt")):
+        old.unlink()  # 重做時清掉舊檔，避免殘留的投影片編號讓 lint 誤判引用有效
     meta, k = [], 0
     with tempfile.TemporaryDirectory() as tmp:
         for page in range(1, page_count(pdf) + 1):
             img = Image.open(render(pdf, page, tmp))
             texts = []
-            for slot, box in enumerate(find_slides(img), 1):
+            # 只有原站的 handout（檔名含 handouts）是「左欄 3 張投影片」版面；其他 PDF（實作說明、
+            # 論文、答案）每頁算一個單位，slide N 就是第 N 頁（2026-11-16 project_*.pdf 被切壞）
+            boxes = find_slides(img) if "handouts" in pdf.name.lower() else [(0, 0, img.width, img.height)]
+            for slot, box in enumerate(boxes, 1):
                 k += 1
                 text, method = pdftotext_box(pdf, page, box), "pdftotext"
                 if not looks_like_text(text):

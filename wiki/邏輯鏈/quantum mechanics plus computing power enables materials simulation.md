@@ -38,7 +38,7 @@ flowchart LR
 自繪，依據 [[來源-AW01B]]、[[來源-AW01C]]、[[來源-AW01D]]、[[來源-AW01G]]、[[來源-AW01E]] 的投影片。
 
 ## Limitations
-- 第 4 步到第 5 步之間，還需要「好的近似方法」才能讓方程式真的可解（也就是 U02 的 DFT）。U01 只建立了動機，這一步要等 U02 匯入後延伸。
+- 第 4 步到第 5 步之間，還需要「好的近似方法」才能讓方程式真的可解，也就是 U02 的 DFT。這一步延伸成另一條鏈：[[HK theorems justify the Kohn-Sham scheme]]。
 - 計算的是 solid（理想晶體）的性質；material 的性質還取決於 microstructure（[[crystal structure and microstructure]]）。
 
 ## Related hands-on

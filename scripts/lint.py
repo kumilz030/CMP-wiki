@@ -190,6 +190,8 @@ def check_public(page):
             n = len(q.group(1).split())
             if n > MAX_QUOTE_WORDS:
                 errs.append(f"第 {ln} 行：引號原文 {n} 字，超過 {MAX_QUOTE_WORDS} 字（AGENTS.md §6-2：每處不超過一句）")
+        if "\\,'" in line:
+            errs.append(f"第 {ln} 行：數學式裡的 `\\,'` 會讓網站的 KaTeX 解析失敗，請改成 `\\vec r'` 這類寫法")
         if EMAIL_RE.search(line):
             errs.append(f"第 {ln} 行：疑似 email，公開頁面不可放個人資料（§6-5）")
     if page.type == "來源":
