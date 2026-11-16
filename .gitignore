@@ -1,0 +1,14 @@
+# 原站著作：只留在本機，不進 git（AGENTS.md §6）
+raw/
+
+# 網站建置產物
+.quartz/.build/
+.quartz/public/
+node_modules/
+
+# Obsidian 個人狀態
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.trash/
+
+__pycache__/

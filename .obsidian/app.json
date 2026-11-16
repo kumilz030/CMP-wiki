@@ -1,0 +1,7 @@
+{
+  "attachmentFolderPath": "wiki/附圖",
+  "newLinkFormat": "shortest",
+  "useMarkdownLinks": false,
+  "alwaysUpdateLinks": true,
+  "userIgnoreFilters": ["raw/", ".quartz/"]
+}

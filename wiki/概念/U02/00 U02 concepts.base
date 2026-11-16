@@ -1,0 +1,16 @@
+filters:
+  and:
+    - file.inFolder("wiki/概念/U02")
+    - file.ext == "md"
+views:
+  - type: table
+    name: U02 concepts (course order)
+    order:
+      - order
+      - file.name
+      - kind
+      - aliases
+      - topic
+    sort:
+      - property: order
+        direction: ASC
