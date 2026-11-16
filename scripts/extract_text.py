@@ -53,6 +53,25 @@ def find_slides(img):
     if H <= W or not gutter:
         return [(0, 0, W, H)]
     right = gutter[0]
+    # 優先用投影片外框的左邊線：它是一條連續的直線，長度就是投影片的高度。
+    # 在左欄最左邊的幾欄裡，找連續深色段落最長的那一欄，每段夠長的就是一張投影片。
+    # （用墨水區塊判斷會漏掉只有幾行淺色字的投影片，2026-11-16 AW01D 實測）
+    xs = np.where(col[:right] > 0.05)[0]
+    best = []
+    for x in xs[:15] if len(xs) else []:
+        runs, start = [], None
+        for y, v in enumerate(np.append(dark[:, x], False)):
+            if v and start is None:
+                start = y
+            elif not v and start is not None:
+                if y - start > H * 0.12:
+                    runs.append((start, y))
+                start = None
+        if sum(e - s for s, e in runs) > sum(e - s for s, e in best):
+            best = runs
+            x_border = x
+    if best:
+        return [(int(x_border), int(s), int(right - x_border), int(e - s)) for s, e in best]
     rows = dark[:, :right].mean(1) > 0.01
     bands, start, end, gap = [], None, 0, 0
     for y, v in enumerate(rows):
