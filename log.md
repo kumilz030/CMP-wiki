@@ -7,3 +7,5 @@
 ## [2026-11-16] setup | 講義改用投影片編號出處：extract_text.py 把講義切成投影片（s<K>.txt），掃描或亂碼文字層用 tesseract OCR（psm 3 才抓得到標題）；lint 改驗證 slide 編號、模糊比對引號原文、擋 p.N；AGENTS、DESIGN、PRD、範本、skills、README 同步。測試：AW02A 5 張、AW03C 3 張投影片，lint 6 個案例全部正確
 ## [2026-11-16] ingest | U01 setting the stage：來源-AW01F-creation、AW01B、AW01C、AW01D、AW01E、AW01F、AW01G、AW01H、lets-play-w1 → 11 概念、1 邏輯鏈、1 實作、測試題 10 題；⚠️待查證 3。extract_text.py 改用投影片左邊框切投影片（舊方法會漏掉只有淺色字的投影片）；講義的 spoiler 方塊下文字層仍在，內容已用自己的話寫入並註明
 ## [2026-11-16] ingest | U02 density functional theory：來源-AW02A–G、AW02F-quiz、AW03A–H、AW03A-bis、AW03G-bis/tris、AW03H-teaser、basis-sets-1/2、lets-play-w2/w3a/w3b（25 頁）→ 28 概念、3 方程式、2 推導、2 邏輯鏈、2 實作、1 習題、1 綜合（HF versus DFT），測試題增至 19 題；⚠️待查證新增 2（AW02F 投影片 e–e 項符號、QE K_POINTS 位置）。extract_text.py：右邊界取投影片外框、只有 handouts 才切投影片、重做時清掉舊檔；lint 新增 `\,'` 檢查（KaTeX 無法解析）
+## [2026-11-16] publish | M3：建立公開 repo kumilz030/CMP-wiki、啟用 GitHub Pages（GitHub Actions）、第一次部署。push 前把 5 個 commit 的作者 email 改成 GitHub noreply（使用者同意的例外），commit 雜湊因此改變，舊→新：96a4abd→407be8d、3072775→894ee42、7e6639a→19b7edc、566133c→b9d9233、c4acf06→e9ad8d0（commit 訊息與上面 log 中的「起點」仍是舊雜湊）
+## [2026-11-16] lint | knowledge base test questions 19/19 通過；lint 0 錯誤；⚠️待查證 5

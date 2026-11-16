@@ -97,5 +97,5 @@
   - `p.N` 的粒度太粗（一頁 3 張投影片）。
   - 決定（2026-11-16）：安裝 `tesseract-ocr`；`extract_text.py` 把講義切成投影片並 OCR；出處改成投影片編號 `slide N`（AGENTS.md §3-1）。
 - [ ] YouTube 字幕下載遇到 HTTP 429（請求過多），是 YouTube 端的限制；之後重抓時放慢，或略過字幕。
-- [ ] 網站網址：用 `kumilz030.github.io/CMP-wiki` 還是自訂網域。
+- [x] 網站網址：https://kumilz030.github.io/CMP-wiki/（2026-11-16 第一次部署）
 - [ ] 要不要寫信請作者授權（目前不需要）。

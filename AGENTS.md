@@ -150,3 +150,4 @@
   - 例題改成實作頁與習題頁。
 - 2026-11-16：M0 檢查發現講義是掃描影像（一頁 3 張投影片、沒有文字層）。使用者決定裝 OCR，出處改成投影片編號 `slide N`：`extract_text.py` 切投影片＋tesseract OCR，lint 改驗證 slide 編號、模糊比對引號原文、擋 `p.N`。
 - 2026-11-16：使用者要求所有標題用英文（§3-11），本檔、PRD 與範本的標題改成英文。
+- 2026-11-16：M3 公開前，使用者同意例外改寫一次 git 歷史：把 5 個尚未 push 的 commit 的作者 email 改成 GitHub noreply（`235022517+kumilz030@users.noreply.github.com`），並設為本 repo 的 `user.email`，避免個人 email 出現在公開 commit 中。之後仍然不改寫歷史。
