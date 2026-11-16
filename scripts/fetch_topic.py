@@ -5,7 +5,7 @@
   python3 scripts/fetch_topic.py --list                      # 列出單元與主題（slug）
   python3 scripts/fetch_topic.py --unit setting-the-stage    # 抓整個單元
   python3 scripts/fetch_topic.py --topic kohn-sham-equations # 抓單一主題（可重複）
-  加 --no-subs 不抓字幕；加 --dry-run 只列出會抓什麼。
+  加 --no-subs 不抓字幕；加 --dry-run 只列出會抓什麼；加 --refresh-pages 重寫主題頁摘要（講義與字幕仍然不覆蓋）。
 
 輸出：
   raw/pages/<slug>.md      主題頁的代號、預估時間、影片與講義連結、頁面文字
@@ -57,24 +57,38 @@ def text_of(fragment):
     return "\n".join(l for l in lines if l)
 
 
+def clean_text(t):
+    """去掉 tag 殘片，並在討論區之前截斷：討論區有其他學員的帳號與 email，不可保存（AGENTS.md §6-5）。"""
+    t = re.sub(r'^[^\n]*id="ld-tab-content-\d+">\n?', "", t)
+    cut = re.search(r"^Home › Forums", t, re.M)
+    return t[:cut.start()].rstrip() if cut else t
+
+
 def parse_topic(slug):
     url = f"https://www.compmatphys.org/topics/{slug}/"
     s = get(url).decode("utf-8", "ignore")
     title = html.unescape((re.search(r"<title>(.*?)</title>", s, re.S) or [None, slug])[1]).split(" - compmatphys")[0].strip()
-    i = s.find("ld-focus-content")
+    i = s.find('class="ld-tab-content')  # 主題內容的 tabpanel（之前是 CSS 與側欄目錄）
     j = s.rfind("ld-content-actions")  # 第一個是頂端導覽，內容在最後一個之前
     body = s[i:j] if i > 0 else s
     code = re.search(r"page code ([A-Z]{2}\d{2}[A-Z])", body)
     etime = re.search(r"expected time:\s*([^<]+)", body)
     frames = [html.unescape(u) for u in re.findall(r'<iframe[^>]+?(?:data-src|src)="([^"]+)"', body) if "about:blank" not in u]
     videos = [u for u in frames if "vimeo" in u or "youtube" in u]
+    # Elementor 影片元件把網址放在 data-settings 的 JSON 裡，不是 iframe
+    flat = html.unescape(body).replace("\\/", "/").replace("\\", "")
+    for yid in re.findall(r'youtube_url":"https://www\.youtube\.com/watch\?v=([A-Za-z0-9_-]{6,})', flat):
+        videos.append(f"https://www.youtube.com/embed/{yid}")
+    for vid in re.findall(r'(?:vimeo_url":"https://vimeo\.com/|vimeo\.com/external/)(\d{6,})', flat):
+        videos.append(f"https://player.vimeo.com/video/{vid}")
+    videos = list(dict.fromkeys(videos))
     pdfs = sorted({html.unescape(u) for u in re.findall(r'href="([^"]+\.pdf)"', body)})
     return {
         "slug": slug, "url": url, "title": title,
         "code": code.group(1) if code else None,
         "time": etime.group(1).strip() if etime else None,
         "videos": videos, "forms": [u for u in frames if "docs.google.com/forms" in u],
-        "pdfs": pdfs, "text": text_of(body),
+        "pdfs": pdfs, "text": clean_text(text_of(body)),
     }
 
 
@@ -106,7 +120,7 @@ def fetch_subs(slug, videos, dry):
         subs.mkdir(parents=True, exist_ok=True)
         r = subprocess.run(
             ["yt-dlp", "--skip-download", "--write-subs", "--write-auto-subs", "--sub-langs", "en.*,en",
-             "--sub-format", "vtt", "--referer", "https://www.compmatphys.org/",
+             "--sub-format", "vtt", "--ignore-no-formats-error", "--referer", "https://www.compmatphys.org/",
              "-o", str(subs / f"{slug}_{vid}.%(ext)s"), url],
             capture_output=True, text=True, timeout=180,
         )
@@ -115,12 +129,12 @@ def fetch_subs(slug, videos, dry):
         time.sleep(DELAY)
 
 
-def fetch(slug, subs, dry):
+def fetch(slug, subs, dry, refresh=False):
     t = parse_topic(slug)
     time.sleep(DELAY)
     print(f"- {slug}  code={t['code']}  time={t['time']}  videos={len(t['videos'])}  pdfs={len(t['pdfs'])}")
     page = RAW / "pages" / f"{slug}.md"
-    if page.exists():
+    if page.exists() and not refresh:
         print("  主題頁已存在，不覆蓋")
     elif dry:
         print(f"  [dry-run] 寫 {page.relative_to(ROOT)}")
@@ -164,6 +178,7 @@ def main():
     ap.add_argument("--topic", action="append", default=[])
     ap.add_argument("--no-subs", action="store_true")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--refresh-pages", action="store_true", help="重寫主題頁摘要（講義與字幕仍然不覆蓋）")
     a = ap.parse_args()
     outline = course_outline()
     if a.list:
@@ -178,12 +193,14 @@ def main():
         if not match:
             print(f"找不到單元 {a.unit}；用 --list 查看", file=sys.stderr)
             return 1
-        slugs += match[0]
+        # PRD §3「Out of scope」：webinar、exit、project 相關主題不抓；要抓請用 --topic 明確指定
+        skip = re.compile(r"^(webinar|exit|for-project|only-for-project|upload-your-answer)")
+        slugs += [s for s in match[0] if not skip.match(s)]
     if not slugs:
         ap.print_help()
         return 1
     for s in slugs:
-        fetch(s, not a.no_subs, a.dry_run)
+        fetch(s, not a.no_subs, a.dry_run, a.refresh_pages)
     return 0
 
 

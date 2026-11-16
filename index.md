@@ -1,12 +1,12 @@
 ---
-title: CMP-wiki
+title: Home
 ---
 
 # CMP-wiki
 
 > 這是 Stefaan Cottenier 的免費線上課程 [*Computational Materials Physics*](https://www.compmatphys.org/courses/compmatphys/) 的個人中文筆記，內容依據該課程的講義整理，並非官方教材。完整內容（影片、講義、練習）請到原站閱讀。
->
-> AI 回答問題前先讀這份。依單元分類，每頁一行摘要。健檢用的題組見 [[knowledge base test questions]]。
+
+%% 給 AI：回答問題前先讀這份。依單元分類，每頁一行摘要。健檢用的題組見 knowledge base test questions。（Obsidian 註解，網站上不顯示） %%
 
 ## Synthesis
 - [[key equations]]（方程式總表）：各單元的重要式子、成立條件與頁面
