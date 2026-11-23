@@ -39,9 +39,12 @@ def main():
     bad = [s for s in res["slides"] if s["issues"]]
     if not res.get("katex"):
         print("✗ KaTeX 沒有載入（需要網路連到 cdn.jsdelivr.net）")
+    if res.get("fonts") != "loaded":
+        print(f"✗ 量測時字型尚未載入完成（{res.get('fonts')}）：寬度量測不可信")
     for s in bad:
         print(f"✗ slide {s['slide']:02d}: " + "; ".join(s["issues"]))
-    print(f"共 {res['count']} 頁；有問題 {len(bad)} 頁" + ("（通過）" if not bad and res.get("katex") else ""))
+    ok = not bad and res.get("katex") and res.get("fonts") == "loaded"
+    print(f"共 {res['count']} 頁；有問題 {len(bad)} 頁；字型 {res.get('fonts')}" + ("（通過）" if ok else ""))
     if "--shots" in sys.argv:
         out = Path(sys.argv[sys.argv.index("--shots") + 1])
         out.mkdir(parents=True, exist_ok=True)
@@ -49,7 +52,7 @@ def main():
             subprocess.run([CHROME, *FLAGS, "--virtual-time-budget=15000", f"--screenshot={out / f'slide-{n:02d}.png'}",
                             deck.as_uri() + f"?slide={n}"], capture_output=True, timeout=120)
         print(f"截圖：{out}")
-    return 1 if bad or not res.get("katex") else 0
+    return 1 if bad or not res.get("katex") or res.get("fonts") != "loaded" else 0
 
 
 if __name__ == "__main__":

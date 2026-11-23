@@ -11,3 +11,4 @@
 ## [2026-11-16] lint | knowledge base test questions 19/19 通過；lint 0 錯誤；⚠️待查證 5
 ## [2026-11-23] setup | topic-slides workflow（依「10 把你的工作拆成 AI 能做的流程」p.41–47 的 Graph）：`.agents/workflows/topic-slides.md`、`/topic-slides` skill、`scripts/slides/`（coverage_check、make_cards、check_drafts、render_deck、render_check）；產出 `slides/topic-dft-basics/deck.html`（15 頁），忠實度與渲染檢查全過，AI 審查 3 輪後通過，紀錄見該資料夾的 report.md
 ## [2026-11-23] publish | DFT 基礎概念簡報上網站：build.sh 把 slides/topic-*/deck.html 複製到 /slides/<slug>/；index 加「Slides」區；簡報頁尾加回 wiki 的連結與課程出處；17 個 wiki 連結在建置結果中全部存在
+## [2026-11-24] publish | DFT 簡報第 2 版：修正長數學式被截掉（縮字與檢查都改成等字型載入）、說明文字蓋到頁尾（出處移進頁尾）、文字密度（新增 7 種自繪圖表元件，14 頁改寫成表格＋圖表）；graph 加入版面密度規則（關卡 7）、更嚴格的渲染檢查與人工看截圖（關卡 9）、迴歸測試；AI 審查 3 輪後通過，紀錄見 report.md

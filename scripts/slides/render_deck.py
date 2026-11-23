@@ -54,6 +54,90 @@ def source_item(name):
             f'<span class="src-n">{CARDS.index(name) + 1}</span>{esc(name)}</a>')
 
 
+def split_outside_math(spec, sep):
+    """依分隔符號切開，但不切 $...$ 裡面的（例如 |\\vec r-\\vec r'| 的絕對值符號）。"""
+    out, buf, in_math, i = [], "", False, 0
+    while i < len(spec):
+        if spec[i] == "$":
+            in_math = not in_math
+        if not in_math and spec.startswith(sep, i):
+            out.append(buf)
+            buf, i = "", i + len(sep)
+            continue
+        buf += spec[i]
+        i += 1
+    out.append(buf)
+    return out
+
+
+def figcite(cites):
+    return f'<div class="figcite">{"".join(cite(c) for c in cites)}</div>' if cites else ""
+
+
+def component(kind, spec):
+    """自繪圖表元件（不放講義截圖，AGENTS.md §6）。只做排版，不改字。"""
+    cites = CITE_RE.findall(spec)
+    spec = CITE_RE.sub("", spec).strip()
+    if kind in ("flow", "cycle"):
+        back = ""
+        if kind == "cycle" and "||" in spec:
+            spec, back = [x.strip() for x in spec.split("||", 1)]
+        parts = re.split(r"\s*(<->|->)\s*", spec)
+        html_ = []
+        for k, part in enumerate(parts):
+            if k % 2:
+                html_.append(f'<span class="arrow" aria-hidden="true">{"⇄" if part == "<->" else "→"}</span>')
+            else:
+                hi = part.startswith("*")
+                html_.append(f'<div class="box{" hi" if hi else ""}"><span>{inline(part.lstrip("*").strip())}</span></div>')
+        out = f'<div class="flow">{"".join(html_)}</div>'
+        if kind == "cycle":
+            out += f'<div class="cycle-back"><span class="cb-label">{inline(back)}</span></div>'
+        return f'<div class="fig">{out}{figcite(cites)}</div>'
+    if kind == "stack":
+        items = [x.strip() for x in spec.split("->") if x.strip()]
+        down = '<div class="down" aria-hidden="true">▼</div>'
+        boxes = down.join(f'<div class="box{" hi" if x.startswith("*") else ""}">{inline(x.lstrip("*").strip())}</div>' for x in items)
+        return f'<div class="fig"><div class="stack">{boxes}</div>{figcite(cites)}</div>'
+    if kind == "grid":
+        items = [x.strip() for x in split_outside_math(spec, "|") if x.strip()]
+        cards = []
+        for x in items:
+            t, _, d = x.partition("::")
+            cards.append(f'<div class="card"><div class="ct">{inline(t.strip())}</div>' + (f'<div class="cd">{inline(d.strip())}</div>' if d.strip() else "") + "</div>")
+        return f'<div class="fig"><div class="grid" style="--n:{len(cards)}">{"".join(cards)}</div>{figcite(cites)}</div>'
+    if kind == "ladder":
+        items = [x.strip() for x in spec.split("||")]
+        rows = ['<div class="axis"></div>']
+        for k, x in enumerate(items):
+            rows.append(f'<div class="{"gap" if k % 2 else "lvl"}">{inline(x)}</div>')
+        return f'<div class="fig"><div class="ladder">{"".join(rows)}</div>{figcite(cites)}</div>'
+    if kind == "curve":
+        xl, yl, ml = (inline(x.strip()) for x in (spec.split("||") + ["", "", ""])[:3])
+        svg = ('<svg viewBox="0 0 400 230" preserveAspectRatio="none" aria-hidden="true">'
+               '<path d="M40 10 V200 H390" fill="none" stroke="#8f8a82" stroke-width="2"/>'
+               '<path d="M70 30 C120 190, 200 192, 215 192 S320 150, 375 40" fill="none" stroke="#2f5d8a" stroke-width="4"/>'
+               '<line x1="214" y1="192" x2="214" y2="200" stroke="#c0793a" stroke-width="3"/>'
+               '<circle cx="214" cy="190" r="7" fill="#c0793a"/></svg>')
+        return (f'<div class="fig"><div class="curve">{svg}'
+                f'<div class="lab" style="left:52px;top:-6px">{yl}</div>'
+                f'<div class="lab" style="right:4px;bottom:34px">{xl}</div>'
+                f'<div class="lab" style="left:53.5%;bottom:-30px;transform:translateX(-50%);color:#c0793a">{ml}</div>'
+                f'</div>{figcite(cites)}</div>')
+    if kind == "chain":
+        items = [x.strip() for x in split_outside_math(spec, "|") if x.strip()]
+        steps = []
+        for n, x in enumerate(items, 1):
+            tag, _, text = x.partition("::")
+            tag = tag.strip()
+            hi = tag.startswith("!")  # 「!」標記：這一步引入近似（橘色）
+            tag = tag.lstrip("!")
+            steps.append(f'<div class="step{" approx" if hi else ""}"><span class="no">{n}</span>'
+                         f'<span class="tag">{esc(tag)}</span><span>{inline(text.strip())}</span></div>')
+        return f'<div class="fig"><div class="chain">{"".join(steps)}</div>{figcite(cites)}</div>'
+    return f"<p>{inline(spec)}</p>"
+
+
 def render_body(body):
     lines = body.splitlines()
     title, key, blocks = "", "", []
@@ -74,15 +158,9 @@ def render_body(body):
                 buf.append(lines[i])
             expr = "\n".join(buf).rstrip()[:-2].strip()
             blocks.append(f'<div class="math-block">$${esc(expr)}$$</div>')
-        elif s.startswith("flow:"):
-            spec = s[5:]
-            cites = CITE_RE.findall(spec)
-            spec = CITE_RE.sub("", spec)
-            boxes = [b.strip() for b in spec.split("->") if b.strip()]
-            arrow = '<span class="arrow" aria-hidden="true">→</span>'
-            inner = arrow.join(f'<div class="box">{inline(b)}</div>' for b in boxes)
-            chips = "".join(cite(c) for c in cites)  # noqa: F841
-            blocks.append(f'<div class="flow">{inner}</div><div class="flow-cite">{chips}</div>')
+        elif re.match(r"^(flow|stack|grid|cycle|ladder|curve|chain):", s):
+            kind, spec = s.split(":", 1)
+            blocks.append(component(kind, spec))
         elif s.startswith("- ") or re.match(r"^\d+\. ", s):
             ordered = not s.startswith("- ")
             items = []
@@ -97,7 +175,7 @@ def render_body(body):
         elif s.startswith("|"):
             rows = []
             while i < len(lines) and lines[i].strip().startswith("|"):
-                rows.append([c.strip() for c in lines[i].strip().strip("|").split("|")])
+                rows.append([c.strip() for c in split_outside_math(lines[i].strip().strip("|"), "|")])
                 i += 1
             head, data = rows[0], rows[2:]
             th = "".join(f"<th>{inline(c)}</th>" for c in head)
@@ -128,7 +206,7 @@ def main():
   <header><span class="kicker">{idx:02d} / {len(drafts):02d}</span><h1>{inline(title)}</h1></header>
   {f'<div class="key">{inline(key)}</div>' if key else ''}
   <div class="body">{''.join(blocks)}</div>
-  <footer><span class="src-label">Sources (CMP-wiki)</span>{src}</footer>
+  <footer><span class="src-label">Sources (CMP-wiki)</span>{src}<span class="credit"><a href="https://kumilz030.github.io/CMP-wiki/">CMP-wiki</a> · Computational Materials Physics 課程的非官方筆記（課程 © Stefaan Cottenier）</span></footer>
 </section>''')
     template = (Path(__file__).parent / "deck_template.html").read_text(encoding="utf-8")
     out = template.replace("{{TITLE}}", esc(deck_title)).replace("{{SLIDES}}", "\n".join(slides))

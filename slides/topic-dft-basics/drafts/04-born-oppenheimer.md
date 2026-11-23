@@ -1,12 +1,16 @@
 ---
 cards: [Born-Oppenheimer approximation]
-layout: bullets
+layout: split
 ---
 # Level 1: Born-Oppenheimer Approximation
-> 原子核比電子重得多、動得慢得多，所以先把原子核的位置「凍結」，只解電子的問題〔Born-Oppenheimer approximation〕
+> 原子核重得多、慢得多，所以先「凍結」原子核，只解電子〔Born-Oppenheimer approximation〕
 
-- 古典圖像：兩者受大小相同、方向相反的力，但 $M\gg m$，所以速度 $v_1\ll v_2$〔Born-Oppenheimer approximation〕
-- 結果一：每個粒子 4 個變數（空間座標＋自旋座標），總數從 $4(N_e+N_n)$ 個減為 $4N_e$ 個，原子核位置變成參數〔Born-Oppenheimer approximation〕
-- 結果二：原子核的動能項消失，核–核 Coulomb 排斥項變成常數〔Born-Oppenheimer approximation〕
-- 這是很大的簡化，但得到的方程式仍然難解得多，還需要更多近似〔Born-Oppenheimer approximation〕
-- 幾乎所有固體的 DFT 計算都假設它成立〔Born-Oppenheimer approximation〕
+| 古典圖像 | 原子核 | 電子 |
+|---|---|---|
+| 受力 | $F$ | $F$（方向相反）〔Born-Oppenheimer approximation〕 |
+| 加速度 | $F/M$ | $F/m$〔Born-Oppenheimer approximation〕 |
+| 速度（因為 $M\gg m$） | $v_1$：慢 | $v_2$：快〔Born-Oppenheimer approximation〕 |
+
+grid: 結果一 :: 每個粒子 $x,y,z$＋自旋 $\alpha$；變數 $4(N_e+N_n)$ 個 → $4N_e$ 個 | 結果二 :: 原子核動能項消失，核–核排斥變成常數〔Born-Oppenheimer approximation〕
+
+- 仍然難解得多，還需要更多近似〔Born-Oppenheimer approximation〕

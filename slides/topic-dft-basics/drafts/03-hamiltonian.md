@@ -3,7 +3,7 @@ cards: [Hamiltonian of a solid, density functional theory]
 layout: equation
 ---
 # The Problem: Hamiltonian of a Solid
-> 固體的 Hamiltonian 只有五項，但對應的 many-body Schrödinger equation 難解得多〔Hamiltonian of a solid〕〔density functional theory〕
+> 只有五項，但對應的 many-body Schrödinger equation 難解得多〔Hamiltonian of a solid〕〔density functional theory〕
 
 $$
 \hat H=
@@ -14,7 +14,12 @@ $$
 -\frac{1}{4\pi\varepsilon_0}\sum_{i,A}\frac{e^2Z_A}{|\vec r_i-\vec R_A|}
 $$
 
-- 五項依序是：原子核動能、電子動能、核–核排斥、電子–電子排斥、電子–原子核吸引（SI）〔Hamiltonian of a solid〕
-- 多體波函數 $\Psi$ 有 $3N$ 個空間變數〔density functional theory〕
-- 成立條件：非相對論、只考慮靜電 Coulomb 作用、定態（不含時）〔Hamiltonian of a solid〕
-- 電子–電子項採 $+e^2$：講義印成 $-e^2$，wiki 判斷是筆誤，尚待查證〔Hamiltonian of a solid〕
+| 項 | 意義 | 套用 Born-Oppenheimer 後 |
+|---|---|---|
+| 1 | 原子核動能 | 消失〔Hamiltonian of a solid〕 |
+| 2 | 電子動能 | 不變〔Hamiltonian of a solid〕 |
+| 3 | 核–核排斥 | 變成常數〔Hamiltonian of a solid〕 |
+| 4 | 電子–電子排斥 | 不變〔Hamiltonian of a solid〕 |
+| 5 | 電子–原子核吸引（電子在 external potential 中的能量） | 不變〔Hamiltonian of a solid〕 |
+
+- 第 4 項：講義印成 $-e^2$，wiki 採 $+e^2$（待查證）〔Hamiltonian of a solid〕

@@ -8,7 +8,9 @@
      而且那一頁存在於 wiki；
   4. 每個數學式（$...$、$$...$$）去掉空白後，必須原樣出現在這一頁的卡片中；
   5. 數學式以外的數字，必須出現在這一頁的卡片中；
-  6. 標題用英文（AGENTS.md §3-11）。
+  6. 標題用英文（AGENTS.md §3-11）；
+  7. 版面密度（2026-11-23 加入）：title 以外的每一頁至少要有一個圖表元件（flow、stack、grid、cycle、ladder、
+     curve、chain）、表格或獨立數學式；文字量（中文字數＋英文詞數，不含數學式與出處）不超過 MAX_TEXT。
 
 用法：python3 scripts/slides/check_drafts.py slides/topic-<slug> [NN ...]
 有錯誤時 exit 1。可以只檢查指定的頁（逐頁稿節點的內部 loop 用）。
@@ -23,6 +25,17 @@ CITE_RE = re.compile(r"〔([^〕]+)〕")
 CJK_RE = re.compile(r"[㐀-鿿]")
 MATH_RE = re.compile(r"\$\$(.+?)\$\$|\$(.+?)\$", re.S)
 NUM_RE = re.compile(r"(?<![A-Za-z_])\d+(?:\.\d+)?")
+COMP_RE = re.compile(r"^(flow|stack|grid|cycle|ladder|curve|chain):")
+MAX_TEXT = 110  # 2026-11-23：使用者回饋文字密度偏高，150 → 110
+
+
+def text_amount(body):
+    """文字量：中文字數＋英文詞數；不含標題、數學式、出處與版面語法。"""
+    t = "\n".join(l for l in body.splitlines() if not l.startswith("# "))
+    t = CITE_RE.sub("", MATH_RE.sub("", t))
+    t = re.sub(r"(?m)^\s*(flow|stack|grid|cycle|ladder|curve|chain):", "", t)
+    t = re.sub(r"<->|->|\|\||::|[|*`>#-]", " ", t)
+    return len(CJK_RE.findall(t)) + len(re.findall(r"[A-Za-z][A-Za-z0-9'_.()]*", t))
 
 
 def outline_cards(outline: Path):
@@ -50,9 +63,12 @@ def content_lines(body):
                 lines.append((ln, s))
             continue
         table_row = 0
-        if s.startswith(("- ", "> ", "flow:")) or re.match(r"^\d+\. ", s):
+        if s.startswith(("- ", "> ")) or COMP_RE.match(s) or re.match(r"^\d+\. ", s):
             lines.append((ln, s))
     return lines
+
+
+DENSITY = {}
 
 
 def check(topic: Path, only=None):
@@ -101,6 +117,15 @@ def check(topic: Path, only=None):
             expr = mm.group(1) or mm.group(2)
             if norm_math(expr) not in card_math:
                 err(d.name, f"數學式不在卡片中：${expr.strip()[:60]}$")
+        layout = (re.search(r"^layout:\s*(\S+)", fm, re.M) or [None, "bullets"])[1]
+        amount = text_amount(body)
+        has_visual = bool(re.search(r"(?m)^\s*(\$\$|\||(flow|stack|grid|cycle|ladder|curve|chain):)", body))
+        if layout != "title":
+            if not has_visual:
+                err(d.name, "沒有圖表、表格或獨立數學式（版面密度規則）→ 退回改成圖表")
+            if amount > MAX_TEXT:
+                err(d.name, f"文字量 {amount} 超過 {MAX_TEXT}（版面密度規則）→ 退回精簡或改成圖表")
+        DENSITY[d.name] = amount
         plain = CITE_RE.sub("", MATH_RE.sub("", body))
         for num in sorted(set(NUM_RE.findall(plain))):
             if num not in card_text:
@@ -116,6 +141,7 @@ def main():
         print(f"✗ {where}")
         for e in es:
             print(f"  - {e}")
+    print("文字量：" + "、".join(f"{k[:2]}={v}" for k, v in sorted(DENSITY.items())))
     total = sum(len(v) for v in errs.values())
     print(f"共 {n} 頁；錯誤 {total}" + ("（通過）" if not total else ""))
     return 1 if total else 0
