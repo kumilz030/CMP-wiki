@@ -258,7 +258,11 @@ table.compare tr td:first-child { color: var(--dark); font-weight: 500; }
     if (params.has("check")) runCheck();
     const hint = document.getElementById("hint");
     if (params.has("slide") || params.has("check")) hint.style.display = "none";
-    else setTimeout(() => hint.classList.add("gone"), 4000);
+    else {
+      setTimeout(() => hint.classList.add("gone"), 4000);
+      // 不依賴 CSS transition（背景分頁會暫停 transition）：時間到就直接移除
+      setTimeout(() => { hint.style.display = "none"; }, 4700);
+    }
   }
   if (document.readyState === "complete") start(); else window.addEventListener("load", start);
 })();
