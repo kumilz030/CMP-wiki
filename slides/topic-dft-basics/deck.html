@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DFT Basics: From Many Electrons to One Density</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<!-- 由 scripts/slides/render_deck.py 產生；內容只來自 CMP-wiki。配色依 DESIGN.md。 -->
+<style>
+:root {
+  --bg: #fbfaf7; --panel: #ffffff; --line: #e6e4df; --muted: #8f8a82;
+  --text: #3f3d39; --dark: #1f1e1c; --blue: #2f5d8a; --orange: #c0793a;
+  --blue-soft: rgba(47, 93, 138, 0.08); --orange-soft: rgba(192, 121, 58, 0.10);
+  --stage: #2b2f36;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--stage); }
+body { font-family: "Noto Sans TC", system-ui, sans-serif; color: var(--text); overflow: hidden; }
+#viewport { position: fixed; inset: 0; display: grid; place-items: center; }
+#deck { width: 1280px; height: 720px; position: relative; transform-origin: center center; }
+.slide {
+  position: absolute; inset: 0; background: var(--bg); padding: 48px 72px 0;
+  display: none; flex-direction: column; border-radius: 6px; overflow: hidden;
+}
+.slide.active, .slide.measure { display: flex; }
+.slide header { flex: 0 0 auto; }
+.kicker { font: 500 15px/1 "JetBrains Mono", monospace; color: var(--orange); letter-spacing: .08em; }
+.slide h1 { margin: 10px 0 0; font-size: 40px; line-height: 1.2; color: var(--dark); font-weight: 700; }
+.key {
+  margin-top: 20px; padding: 14px 20px; border-left: 5px solid var(--blue);
+  background: var(--blue-soft); font-size: 24px; line-height: 1.5; color: var(--dark); border-radius: 0 6px 6px 0;
+}
+.body { flex: 1 1 auto; min-height: 0; overflow: hidden; padding: 22px 0 8px; font-size: 24px; line-height: 1.6; }
+.body ul, .body ol { margin: 6px 0; padding-left: 1.3em; }
+.body li { margin: 10px 0; }
+.body li::marker { color: var(--blue); }
+.body p { margin: 8px 0; }
+.math-block { margin: 12px 0; padding: 10px 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; font-size: 22px; overflow: hidden; }
+.math-block .katex-display { margin: 0; }
+code { font-family: "JetBrains Mono", monospace; font-size: .9em; background: var(--line); padding: 0 .3em; border-radius: 3px; }
+strong { color: var(--dark); }
+.cite {
+  display: inline-block; margin-left: 3px; min-width: 16px; padding: 0 4px; font: 600 12px/16px "JetBrains Mono", monospace;
+  vertical-align: super; text-align: center; color: var(--blue); background: var(--blue-soft); border-radius: 8px; text-decoration: none;
+}
+.cite:hover { background: var(--orange-soft); color: var(--orange); }
+.flow { display: flex; align-items: center; gap: 10px; margin: 14px 0 4px; flex-wrap: nowrap; }
+.flow .box {
+  flex: 1 1 0; min-width: 0; padding: 14px 12px; text-align: center; background: var(--panel);
+  border: 2px solid var(--blue); border-radius: 10px; font-size: 21px; line-height: 1.35; color: var(--dark);
+}
+.flow .box:last-child { border-color: var(--orange); background: var(--orange-soft); }
+.flow .arrow { flex: 0 0 auto; color: var(--orange); font-size: 26px; font-weight: 700; }
+.flow-cite { text-align: right; margin-bottom: 6px; }
+table.compare { width: 100%; border-collapse: collapse; font-size: 20px; line-height: 1.45; margin: 8px 0; background: var(--panel); }
+table.compare th { background: var(--blue); color: #fff; text-align: left; padding: 8px 12px; font-weight: 500; }
+table.compare td { border-bottom: 1px solid var(--line); padding: 8px 12px; vertical-align: top; }
+table.compare tr td:first-child { color: var(--dark); font-weight: 500; }
+.slide footer {
+  flex: 0 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 0; padding: 10px 0 18px;
+  border-top: 1px solid var(--line); font-size: 13px; color: var(--muted);
+}
+.src-label { margin-right: 10px; }
+.src { display: inline-flex; align-items: center; gap: 5px; margin-right: 14px; color: var(--blue); text-decoration: none; }
+.src:hover { color: var(--orange); }
+.src-n { min-width: 16px; padding: 0 4px; font: 600 11px/16px "JetBrains Mono", monospace; text-align: center; background: var(--blue-soft); border-radius: 8px; }
+/* title slide */
+.layout-title { justify-content: center; background: linear-gradient(135deg, #fbfaf7 0%, #eef2f7 100%); }
+.layout-title header { margin-top: auto; }
+.layout-title h1 { font-size: 54px; max-width: 980px; }
+.layout-title .key { font-size: 26px; max-width: 980px; border-left-color: var(--orange); background: var(--orange-soft); }
+.layout-title .body { flex: 0 0 auto; font-size: 20px; color: var(--muted); }
+.layout-title .math-block { font-size: 26px; }
+.layout-title .body ul { list-style: none; padding: 0; }
+.layout-title footer { margin-top: auto; }
+/* closing */
+.layout-closing ol { counter-reset: s; list-style: none; padding: 0; }
+.layout-closing ol li { counter-increment: s; position: relative; padding-left: 46px; margin: 9px 0; font-size: 22px; line-height: 1.5; }
+.layout-closing ol li::before {
+  content: counter(s); position: absolute; left: 0; top: 1px; width: 30px; height: 30px; border-radius: 50%;
+  background: var(--blue); color: #fff; font: 700 16px/30px "JetBrains Mono", monospace; text-align: center;
+}
+/* chrome */
+#progress { position: fixed; left: 0; bottom: 0; height: 4px; background: var(--orange); transition: width .2s; }
+#hint { position: fixed; right: 14px; bottom: 10px; color: #9aa3ad; font-size: 12px; font-family: system-ui, sans-serif; }
+#check-result { display: none; }
+@media print {
+  html, body { overflow: visible; background: #fff; }
+  #viewport { position: static; display: block; }
+  #deck { transform: none !important; width: auto; height: auto; }
+  .slide { display: flex !important; position: relative; width: 1280px; height: 720px; page-break-after: always; }
+  #progress, #hint { display: none; }
+}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="deck">
+<section class="slide layout-title" data-n="1" aria-label="DFT Basics: From Many Electrons to One Density">
+  <header><span class="kicker">01 / 15</span><h1>DFT Basics: From Many Electrons to One Density</h1></header>
+  <div class="key">DFT 把難解的 many-body Schrödinger equation 轉換成一組 single-particle Kohn-Sham equations，並以 electron density 作為核心變數<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/density-functional-theory" title="density functional theory" target="_blank" rel="noopener">1</a></div>
+  <div class="body"><div class="math-block">$$\hat H\,\Psi(\vec r_1,\dots,\vec r_N)=E\,\Psi(\vec r_1,\dots,\vec r_N)
+\;\xrightarrow{\ \text{DFT}\ }\;
+\hat H_{KS}\,\phi(\vec r)=E\,\phi(\vec r)$$</div><p>Computational Materials Physics 課程筆記 · CMP-wiki</p></div>
+  <footer><span class="src-label">Sources (CMP-wiki)</span><a class="src" href="https://kumilz030.github.io/CMP-wiki/概念/U02/density-functional-theory" target="_blank" rel="noopener"><span class="src-n">1</span>density functional theory</a></footer>
+</section>
+<section class="slide layout-flow" data-n="2" aria-label="Roadmap: Three Levels of Approximation">
+  <header><span class="kicker">02 / 15</span><h1>Roadmap: Three Levels of Approximation</h1></header>
+  <div class="key">從精確的 Hamiltonian 出發，經過三層近似，最後才得到預測<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/three-levels-of-approximation" title="three levels of approximation" target="_blank" rel="noopener">1</a></div>
+  <div class="body"><div class="flow"><div class="box">exact hamiltonian</div><span class="arrow" aria-hidden="true">→</span><div class="box">level 1: Born-Oppenheimer</div><span class="arrow" aria-hidden="true">→</span><div class="box">level 2: Hartree-Fock 或 DFT</div><span class="arrow" aria-hidden="true">→</span><div class="box">level 3: solution techniques</div><span class="arrow" aria-hidden="true">→</span><div class="box">prediction</div></div><div class="flow-cite"><a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/three-levels-of-approximation" title="three levels of approximation" target="_blank" rel="noopener">1</a></div><ul><li>這張圖在課程多個主題的開頭重複出現，用來標示該主題處於哪一層<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/three-levels-of-approximation" title="three levels of approximation" target="_blank" rel="noopener">1</a></li><li>level 2 有兩條路：Hartree-Fock（及 post-Hartree-Fock）與 density functional theory<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/three-levels-of-approximation" title="three levels of approximation" target="_blank" rel="noopener">1</a></li><li>level 3 是數值求解方法，例如 basis set 與 self-consistent field<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/three-levels-of-approximation" title="three levels of approximation" target="_blank" rel="noopener">1</a></li><li>這份簡報沿著 DFT 這條路，從 level 1 走到 level 3<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/three-levels-of-approximation" title="three levels of approximation" target="_blank" rel="noopener">1</a></li></ul></div>
+  <footer><span class="src-label">Sources (CMP-wiki)</span><a class="src" href="https://kumilz030.github.io/CMP-wiki/概念/U02/three-levels-of-approximation" target="_blank" rel="noopener"><span class="src-n">1</span>three levels of approximation</a></footer>
+</section>
+<section class="slide layout-equation" data-n="3" aria-label="The Problem: Hamiltonian of a Solid">
+  <header><span class="kicker">03 / 15</span><h1>The Problem: Hamiltonian of a Solid</h1></header>
+  <div class="key">固體的 Hamiltonian 只有五項，但對應的 many-body Schrödinger equation 難解得多<a class="cite" href="https://kumilz030.github.io/CMP-wiki/方程式/Hamiltonian-of-a-solid" title="Hamiltonian of a solid" target="_blank" rel="noopener">1</a><a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/density-functional-theory" title="density functional theory" target="_blank" rel="noopener">2</a></div>
+  <div class="body"><div class="math-block">$$\hat H=
+-\sum_A\frac{\hbar^2\nabla^2_{\vec R_A}}{2M_A}
+-\sum_i\frac{\hbar^2\nabla^2_{\vec r_i}}{2m_i}
++\frac12\frac{1}{4\pi\varepsilon_0}\sum_{A\neq B}\frac{e^2Z_AZ_B}{|\vec R_A-\vec R_B|}
++\frac12\frac{1}{4\pi\varepsilon_0}\sum_{i\neq j}\frac{e^2}{|\vec r_i-\vec r_j|}
+-\frac{1}{4\pi\varepsilon_0}\sum_{i,A}\frac{e^2Z_A}{|\vec r_i-\vec R_A|}$$</div><ul><li>五項依序是：原子核動能、電子動能、核–核排斥、電子–電子排斥、電子–原子核吸引（SI）<a class="cite" href="https://kumilz030.github.io/CMP-wiki/方程式/Hamiltonian-of-a-solid" title="Hamiltonian of a solid" target="_blank" rel="noopener">1</a></li><li>多體波函數 $\Psi$ 有 $3N$ 個空間變數<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/density-functional-theory" title="density functional theory" target="_blank" rel="noopener">2</a></li><li>成立條件：非相對論、只考慮靜電 Coulomb 作用、定態（不含時）<a class="cite" href="https://kumilz030.github.io/CMP-wiki/方程式/Hamiltonian-of-a-solid" title="Hamiltonian of a solid" target="_blank" rel="noopener">1</a></li><li>電子–電子項採 $+e^2$：講義印成 $-e^2$，wiki 判斷是筆誤，尚待查證<a class="cite" href="https://kumilz030.github.io/CMP-wiki/方程式/Hamiltonian-of-a-solid" title="Hamiltonian of a solid" target="_blank" rel="noopener">1</a></li></ul></div>
+  <footer><span class="src-label">Sources (CMP-wiki)</span><a class="src" href="https://kumilz030.github.io/CMP-wiki/方程式/Hamiltonian-of-a-solid" target="_blank" rel="noopener"><span class="src-n">1</span>Hamiltonian of a solid</a><a class="src" href="https://kumilz030.github.io/CMP-wiki/概念/U02/density-functional-theory" target="_blank" rel="noopener"><span class="src-n">2</span>density functional theory</a></footer>
+</section>
+<section class="slide layout-bullets" data-n="4" aria-label="Level 1: Born-Oppenheimer Approximation">
+  <header><span class="kicker">04 / 15</span><h1>Level 1: Born-Oppenheimer Approximation</h1></header>
+  <div class="key">原子核比電子重得多、動得慢得多，所以先把原子核的位置「凍結」，只解電子的問題<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/Born-Oppenheimer-approximation" title="Born-Oppenheimer approximation" target="_blank" rel="noopener">1</a></div>
+  <div class="body"><ul><li>古典圖像：兩者受大小相同、方向相反的力，但 $M\gg m$，所以速度 $v_1\ll v_2$<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/Born-Oppenheimer-approximation" title="Born-Oppenheimer approximation" target="_blank" rel="noopener">1</a></li><li>結果一：每個粒子 4 個變數（空間座標＋自旋座標），總數從 $4(N_e+N_n)$ 個減為 $4N_e$ 個，原子核位置變成參數<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/Born-Oppenheimer-approximation" title="Born-Oppenheimer approximation" target="_blank" rel="noopener">1</a></li><li>結果二：原子核的動能項消失，核–核 Coulomb 排斥項變成常數<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/Born-Oppenheimer-approximation" title="Born-Oppenheimer approximation" target="_blank" rel="noopener">1</a></li><li>這是很大的簡化，但得到的方程式仍然難解得多，還需要更多近似<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/Born-Oppenheimer-approximation" title="Born-Oppenheimer approximation" target="_blank" rel="noopener">1</a></li><li>幾乎所有固體的 DFT 計算都假設它成立<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/Born-Oppenheimer-approximation" title="Born-Oppenheimer approximation" target="_blank" rel="noopener">1</a></li></ul></div>
+  <footer><span class="src-label">Sources (CMP-wiki)</span><a class="src" href="https://kumilz030.github.io/CMP-wiki/概念/U02/Born-Oppenheimer-approximation" target="_blank" rel="noopener"><span class="src-n">1</span>Born-Oppenheimer approximation</a></footer>
+</section>
+<section class="slide layout-bullets" data-n="5" aria-label="Two Tools: Functional and Electron Density">
+  <header><span class="kicker">05 / 15</span><h1>Two Tools: Functional and Electron Density</h1></header>
+  <div class="key">functional 把一個函數對應到一個數；electron density $\rho(\vec r)$ 是位置 $\vec r$ 的函數<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/functional" title="functional" target="_blank" rel="noopener">1</a><a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/electron-density" title="electron density" target="_blank" rel="noopener">2</a></div>
+  <div class="body"><ul><li>functional（泛函）：$F:\mathcal F\to\mathbb C:\ f\mapsto F[f]$，例如 $F[f]=\int_{-\infty}^{\infty}f(x)\,e^{-x^2}dx$ 或 $F[f]=f(0)$<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/functional" title="functional" target="_blank" rel="noopener">1</a></li><li>functional derivative（泛函導數）：$F_v[\rho]=\int\rho(\vec r)\,v(\vec r)\,d\vec r$ 的導數是 $\frac{\delta F_v[\rho]}{\delta\rho}=v(\vec r)$<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/functional" title="functional" target="_blank" rel="noopener">1</a></li><li>electron density（電子密度）$\rho(\vec r)$：在 $\vec r$ 找到任一個電子的機率，不管其他 $N-1$ 個電子在哪裡<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/electron-density" title="electron density" target="_blank" rel="noopener">2</a></li><li>Kohn-Sham 形式：$\rho(\vec r)=\sum_{i=1}^{N}\phi_i^*(\vec r)\,\phi_i(\vec r)$<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/electron-density" title="electron density" target="_blank" rel="noopener">2</a></li><li>不懂 functional，就沒辦法懂 density functional theory<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/functional" title="functional" target="_blank" rel="noopener">1</a></li></ul></div>
+  <footer><span class="src-label">Sources (CMP-wiki)</span><a class="src" href="https://kumilz030.github.io/CMP-wiki/概念/U02/functional" target="_blank" rel="noopener"><span class="src-n">1</span>functional</a><a class="src" href="https://kumilz030.github.io/CMP-wiki/概念/U02/electron-density" target="_blank" rel="noopener"><span class="src-n">2</span>electron density</a></footer>
+</section>
+<section class="slide layout-equation" data-n="6" aria-label="The External Potential">
+  <header><span class="kicker">06 / 15</span><h1>The External Potential</h1></header>
+  <div class="key">external potential（外位勢）是一組固定的原子核在空間點 $\vec r$ 產生的電位<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/external-potential" title="external potential" target="_blank" rel="noopener">1</a></div>
+  <div class="body"><div class="math-block">$$V_{ext}(\vec r)=+\frac{1}{4\pi\varepsilon_0}\sum_A\frac{eZ_A}{|\vec r-\vec R_A|}$$</div><ul><li>它完全由原子核決定，不含任何電子的資訊<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/external-potential" title="external potential" target="_blank" rel="noopener">1</a></li><li>單位是 V（J/C）：它是<strong>電位</strong>，不是能量<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/external-potential" title="external potential" target="_blank" rel="noopener">1</a></li><li>對應的能量寫成 DFT 形式：$E_{ext}=\int V_{ext}(\vec r)\,\rho(\vec r)\,d\vec r$，這裡的 $\rho$ 是 charge density<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/external-potential" title="external potential" target="_blank" rel="noopener">1</a></li><li>要分清 $V_{ext}$（電位）、$E_{ext}$（能量）、$\hat V_{ext}$（算符）<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/external-potential" title="external potential" target="_blank" rel="noopener">1</a></li><li>符號慣例：有些教科書把 $V_{ext}$ 定義成電子感受到的位能（已乘上 $-e$），讀 $\hat H_{KS}$ 時要注意是哪一種<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/external-potential" title="external potential" target="_blank" rel="noopener">1</a></li></ul></div>
+  <footer><span class="src-label">Sources (CMP-wiki)</span><a class="src" href="https://kumilz030.github.io/CMP-wiki/概念/U02/external-potential" target="_blank" rel="noopener"><span class="src-n">1</span>external potential</a></footer>
+</section>
+<section class="slide layout-flow" data-n="7" aria-label="First Hohenberg-Kohn Theorem">
+  <header><span class="kicker">07 / 15</span><h1>First Hohenberg-Kohn Theorem</h1></header>
+  <div class="key">多電子系統的基態密度和 external potential 之間存在一對一的對應（Hohenberg 與 Kohn，1964）<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/first-Hohenberg-Kohn-theorem" title="first Hohenberg-Kohn theorem" target="_blank" rel="noopener">1</a></div>
+  <div class="body"><div class="flow"><div class="box">$\hat V_{ext}$</div><span class="arrow" aria-hidden="true">→</span><div class="box">$\Psi$（基態）</div><span class="arrow" aria-hidden="true">→</span><div class="box">$\rho$（基態密度）</div></div><div class="flow-cite"><a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/first-Hohenberg-Kohn-theorem" title="first Hohenberg-Kohn theorem" target="_blank" rel="noopener">1</a></div><ul><li>映射 $C:\hat V_{ext}\mapsto\Psi$ 與 $D:\Psi\mapsto\rho$ 都是 bijective；$D$ 是 injective 是「非常意外」的部分<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/first-Hohenberg-Kohn-theorem" title="first Hohenberg-Kohn theorem" target="_blank" rel="noopener">1</a></li><li>推論：任何可觀測的基態性質都能寫成密度的唯一泛函 $\text{property}=\langle\Psi|\hat O|\Psi\rangle=O[\rho]$<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/first-Hohenberg-Kohn-theorem" title="first Hohenberg-Kohn theorem" target="_blank" rel="noopener">1</a></li><li>$\Psi$ 有 $3N$ 個變數，$\rho$ 只有 3 個，但基態密度含有的資訊和基態波函數一樣多<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/first-Hohenberg-Kohn-theorem" title="first Hohenberg-Kohn theorem" target="_blank" rel="noopener">1</a></li><li>限制：證明針對 non-degenerate ground states；定理只說泛函存在而且唯一，沒有給出形式；只適用於基態<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/first-Hohenberg-Kohn-theorem" title="first Hohenberg-Kohn theorem" target="_blank" rel="noopener">1</a></li></ul></div>
+  <footer><span class="src-label">Sources (CMP-wiki)</span><a class="src" href="https://kumilz030.github.io/CMP-wiki/概念/U02/first-Hohenberg-Kohn-theorem" target="_blank" rel="noopener"><span class="src-n">1</span>first Hohenberg-Kohn theorem</a></footer>
+</section>
+<section class="slide layout-equation" data-n="8" aria-label="Second Hohenberg-Kohn Theorem">
+  <header><span class="kicker">08 / 15</span><h1>Second Hohenberg-Kohn Theorem</h1></header>
+  <div class="key">對基態密度給出基態總能量的唯一泛函，對任何其他密度都會給出更高的能量<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/second-Hohenberg-Kohn-theorem" title="second Hohenberg-Kohn theorem" target="_blank" rel="noopener">1</a></div>
+  <div class="body"><div class="math-block">$$E_{V_{ext}}[\rho]=F_{HK}[\rho]+\int\rho(\vec r)\,V_{ext}(\vec r)\,d\vec r$$</div><ul><li>$F_{HK}[\rho]$：未知的 Hohenberg-Kohn functional，給出總能量中的動能與電子–電子作用部分<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/second-Hohenberg-Kohn-theorem" title="second Hohenberg-Kohn theorem" target="_blank" rel="noopener">1</a></li><li>定理的內容：$E_{V_{ext}}[\rho]\ge E_{V_{ext}}[\rho_0]$，等號只在 $\rho=\rho_0$ 成立<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/second-Hohenberg-Kohn-theorem" title="second Hohenberg-Kohn theorem" target="_blank" rel="noopener">1</a></li><li>方法：把總能量泛函對密度最小化，就能找到基態密度<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/second-Hohenberg-Kohn-theorem" title="second Hohenberg-Kohn theorem" target="_blank" rel="noopener">1</a></li><li>但定理沒有給出 $F_{HK}$ 的形式<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/second-Hohenberg-Kohn-theorem" title="second Hohenberg-Kohn theorem" target="_blank" rel="noopener">1</a></li></ul></div>
+  <footer><span class="src-label">Sources (CMP-wiki)</span><a class="src" href="https://kumilz030.github.io/CMP-wiki/概念/U02/second-Hohenberg-Kohn-theorem" target="_blank" rel="noopener"><span class="src-n">1</span>second Hohenberg-Kohn theorem</a></footer>
+</section>
+<section class="slide layout-compare" data-n="9" aria-label="Kohn-Sham Scheme: Quasi-particles">
+  <header><span class="kicker">09 / 15</span><h1>Kohn-Sham Scheme: Quasi-particles</h1></header>
+  <div class="key">把交互作用的多電子問題，精確地轉換成不交互作用的 quasi-particles（準粒子）問題，準粒子的密度等於真實系統的基態密度<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/Kohn-Sham-scheme" title="Kohn-Sham scheme" target="_blank" rel="noopener">1</a></div>
+  <div class="body"><table class="compare"><thead><tr><th>原本的 Schrödinger Hamiltonian</th><th>Kohn-Sham Hamiltonian</th></tr></thead><tbody><tr><td>電子的動能</td><td>準粒子的動能<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/Kohn-Sham-scheme" title="Kohn-Sham scheme" target="_blank" rel="noopener">1</a></td></tr><tr><td>受原子核的 Coulomb 位勢作用</td><td>受原子核的 Coulomb 位勢作用<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/Kohn-Sham-scheme" title="Kohn-Sham scheme" target="_blank" rel="noopener">1</a></td></tr><tr><td>電子之間的 Coulomb 作用</td><td>和其他所有準粒子的平均靜態分布作用（Hartree）<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/Kohn-Sham-scheme" title="Kohn-Sham scheme" target="_blank" rel="noopener">1</a></td></tr><tr><td>—</td><td>再加上一個「神秘的」exchange-correlation potential<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/Kohn-Sham-scheme" title="Kohn-Sham scheme" target="_blank" rel="noopener">1</a></td></tr></tbody></table><ul><li>數學簡單得多，但必須知道 $V_{xc}$<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/Kohn-Sham-scheme" title="Kohn-Sham scheme" target="_blank" rel="noopener">1</a></li><li>行星類比：把行星之間的交互作用關掉，加一個精心選擇的外加靜態場，就能重現每顆行星的精確運動<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/Kohn-Sham-scheme" title="Kohn-Sham scheme" target="_blank" rel="noopener">1</a></li></ul></div>
+  <footer><span class="src-label">Sources (CMP-wiki)</span><a class="src" href="https://kumilz030.github.io/CMP-wiki/概念/U02/Kohn-Sham-scheme" target="_blank" rel="noopener"><span class="src-n">1</span>Kohn-Sham scheme</a></footer>
+</section>
+<section class="slide layout-equation" data-n="10" aria-label="Kohn-Sham Equations">
+  <header><span class="kicker">10 / 15</span><h1>Kohn-Sham Equations</h1></header>
+  <div class="key">實際要解的是一組單粒子方程式；密度由能量最低的 $N$ 個 Kohn-Sham 軌域組成<a class="cite" href="https://kumilz030.github.io/CMP-wiki/方程式/Kohn-Sham-equations" title="Kohn-Sham equations" target="_blank" rel="noopener">1</a></div>
+  <div class="body"><div class="math-block">$$\hat H_{KS}\,\phi_i=\epsilon_i\,\phi_i,\qquad
+\rho(\vec r)=\sum_{i=1}^{N}\phi_i^*(\vec r)\,\phi_i(\vec r)$$</div><div class="math-block">$$\hat H_{KS}=\hat T_0+\hat V_H+\hat V_{ext}+\hat V_{xc}$$</div><ul><li>各項：$\hat T_0$ 動能、$\hat V_H$ Hartree potential、$V_{ext}$ external potential、$V_{xc}$ XC potential<a class="cite" href="https://kumilz030.github.io/CMP-wiki/方程式/Kohn-Sham-equations" title="Kohn-Sham equations" target="_blank" rel="noopener">1</a></li><li>XC 位勢是能量泛函的泛函導數：$V_{xc}=\frac{\delta E_{xc}[\rho]}{\delta\rho}$<a class="cite" href="https://kumilz030.github.io/CMP-wiki/方程式/Kohn-Sham-equations" title="Kohn-Sham equations" target="_blank" rel="noopener">1</a></li><li>成立條件：Born-Oppenheimer、基態、非相對論、自旋未極化；$E_{xc}$ 必須近似<a class="cite" href="https://kumilz030.github.io/CMP-wiki/方程式/Kohn-Sham-equations" title="Kohn-Sham equations" target="_blank" rel="noopener">1</a></li><li>常見錯誤：$\phi_i$、$\epsilon_i$ 是準粒子的軌域與能量，不是真實電子的<a class="cite" href="https://kumilz030.github.io/CMP-wiki/方程式/Kohn-Sham-equations" title="Kohn-Sham equations" target="_blank" rel="noopener">1</a></li></ul></div>
+  <footer><span class="src-label">Sources (CMP-wiki)</span><a class="src" href="https://kumilz030.github.io/CMP-wiki/方程式/Kohn-Sham-equations" target="_blank" rel="noopener"><span class="src-n">1</span>Kohn-Sham equations</a></footer>
+</section>
+<section class="slide layout-flow" data-n="11" aria-label="Exchange and Correlation">
+  <header><span class="kicker">11 / 15</span><h1>Exchange and Correlation</h1></header>
+  <div class="key">從獨立電子的近似到精確解，中間隔著 exchange 與 correlation 兩段能量<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/exchange-and-correlation" title="exchange and correlation" target="_blank" rel="noopener">1</a></div>
+  <div class="body"><div class="flow"><div class="box">Hartree product（乘積波函數）</div><span class="arrow" aria-hidden="true">→</span><div class="box">Slater determinant（Hartree-Fock）</div><span class="arrow" aria-hidden="true">→</span><div class="box">exact solution（未知）</div></div><div class="flow-cite"><a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/exchange-and-correlation" title="exchange and correlation" target="_blank" rel="noopener">1</a></div><ul><li>exchange：多體波函數寫成乘積與寫成 Slater determinant 的能量差<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/exchange-and-correlation" title="exchange and correlation" target="_blank" rel="noopener">1</a></li><li>correlation：Hartree-Fock 解與精確解的能量差<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/exchange-and-correlation" title="exchange and correlation" target="_blank" rel="noopener">1</a></li><li>古典 correlation：獨立粒子解與精確解的能量差（例：太陽–地球–木星）<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/exchange-and-correlation" title="exchange and correlation" target="_blank" rel="noopener">1</a></li><li>HF 依定義有精確的 exchange、沒有 correlation；精確的 DFT 兩者都有<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/exchange-and-correlation" title="exchange and correlation" target="_blank" rel="noopener">1</a></li><li>correlation 是精確解難以求得的主要原因<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/exchange-and-correlation" title="exchange and correlation" target="_blank" rel="noopener">1</a></li></ul></div>
+  <footer><span class="src-label">Sources (CMP-wiki)</span><a class="src" href="https://kumilz030.github.io/CMP-wiki/概念/U02/exchange-and-correlation" target="_blank" rel="noopener"><span class="src-n">1</span>exchange and correlation</a></footer>
+</section>
+<section class="slide layout-equation" data-n="12" aria-label="The XC Functional and LDA">
+  <header><span class="kicker">12 / 15</span><h1>The XC Functional and LDA</h1></header>
+  <div class="key">唯一的 XC-functional 一定存在，但形式未知，只能用近似（LDA、GGA）：XC-functional 的選擇是 DFT 唯一的本質近似<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/exchange-correlation-functional" title="exchange-correlation functional" target="_blank" rel="noopener">1</a></div>
+  <div class="body"><div class="math-block">$$E_{xc}[\rho]\;\Rightarrow\;E_{xc}^{LDA}[\rho]=\int\rho(\vec r)\,\varepsilon_{xc}\big(\rho(\vec r)\big)\,d\vec r$$</div><ul><li>真正的 XC 泛函要能解釋所有固態物理與化學，所以會非常「病態」，沒有希望寫成封閉式<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/exchange-correlation-functional" title="exchange-correlation functional" target="_blank" rel="noopener">1</a></li><li>LDA 是一個 postulate：每一小塊空間的 XC 能量，等於相同密度的均勻電子氣的 XC 能量<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/local-density-approximation" title="local density approximation" target="_blank" rel="noopener">2</a></li><li>$\varepsilon_{xc}(\rho)$：密度為 $\rho$ 的均勻電子氣中每個電子的 XC 能量<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/local-density-approximation" title="local density approximation" target="_blank" rel="noopener">2</a></li><li>LDA 只含部分 exchange 與部分 correlation；延伸是 GGA，要改進「需要黑魔法」<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/exchange-correlation-functional" title="exchange-correlation functional" target="_blank" rel="noopener">1</a></li><li>在 Quantum ESPRESSO 用 <code>input_dft</code> 選擇，例如 <code>'LDA'</code>、<code>'PBE'</code>；pseudopotential 是針對特定 XC 做的，不要混用<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/exchange-correlation-functional" title="exchange-correlation functional" target="_blank" rel="noopener">1</a></li></ul></div>
+  <footer><span class="src-label">Sources (CMP-wiki)</span><a class="src" href="https://kumilz030.github.io/CMP-wiki/概念/U02/exchange-correlation-functional" target="_blank" rel="noopener"><span class="src-n">1</span>exchange-correlation functional</a><a class="src" href="https://kumilz030.github.io/CMP-wiki/概念/U02/local-density-approximation" target="_blank" rel="noopener"><span class="src-n">2</span>local density approximation</a></footer>
+</section>
+<section class="slide layout-flow" data-n="13" aria-label="Solving It: Self-consistent Field">
+  <header><span class="kicker">13 / 15</span><h1>Solving It: Self-consistent Field</h1></header>
+  <div class="key">要解 $\hat H_{KS}$ 才能得到 $\rho$，但要先知道 $\rho$ 才寫得出 $\hat H_{KS}$，所以必須迭代求解<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/self-consistent-field" title="self-consistent field" target="_blank" rel="noopener">1</a></div>
+  <div class="body"><div class="flow"><div class="box">$\rho_{old}$</div><span class="arrow" aria-hidden="true">→</span><div class="box">建出 $V_{eff}$</div><span class="arrow" aria-hidden="true">→</span><div class="box">解 $\hat H_{KS}\phi_i=\epsilon_i\phi_i$</div><span class="arrow" aria-hidden="true">→</span><div class="box">由 $\phi_i$ 建出 $\rho_{new}$</div><span class="arrow" aria-hidden="true">→</span><div class="box">$\rho_{new}=\rho_{old}$？</div></div><div class="flow-cite"><a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/self-consistent-field" title="self-consistent field" target="_blank" rel="noopener">1</a></div><ul><li>若相等，問題解決；否則令 $\rho_{old}\Leftarrow\rho_{new}$，回到第一步<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/self-consistent-field" title="self-consistent field" target="_blank" rel="noopener">1</a></li><li>Quantum ESPRESSO 的 <code>calculation='scf'</code> 就是做這個迴圈；<code>conv_thr</code> 與 <code>mixing_beta</code> 控制迭代<a class="cite" href="https://kumilz030.github.io/CMP-wiki/概念/U02/self-consistent-field" title="self-consistent field" target="_blank" rel="noopener">1</a></li></ul></div>
+  <footer><span class="src-label">Sources (CMP-wiki)</span><a class="src" href="https://kumilz030.github.io/CMP-wiki/概念/U02/self-consistent-field" target="_blank" rel="noopener"><span class="src-n">1</span>self-consistent field</a></footer>
+</section>
+<section class="slide layout-compare" data-n="14" aria-label="HF versus DFT">
+  <header><span class="kicker">14 / 15</span><h1>HF versus DFT</h1></header>
+  <div class="key">post-HF 適合小系統、準確度高；DFT 可以處理大系統，但有一些無法控制的「noise」<a class="cite" href="https://kumilz030.github.io/CMP-wiki/綜合/HF-versus-DFT" title="HF versus DFT" target="_blank" rel="noopener">1</a></div>
+  <div class="body"><table class="compare"><thead><tr><th></th><th>Hartree-Fock（＋post-HF）</th><th>DFT（精確 $E_{xc}$）</th><th>DFT（LDA 等近似）</th></tr></thead><tbody><tr><td>exchange</td><td>依定義精確</td><td>精確</td><td>部分<a class="cite" href="https://kumilz030.github.io/CMP-wiki/綜合/HF-versus-DFT" title="HF versus DFT" target="_blank" rel="noopener">1</a></td></tr><tr><td>correlation</td><td>依定義沒有；由 post-HF 一步步加入</td><td>精確</td><td>部分<a class="cite" href="https://kumilz030.github.io/CMP-wiki/綜合/HF-versus-DFT" title="HF versus DFT" target="_blank" rel="noopener">1</a></td></tr><tr><td>結果</td><td>可系統地逼近精確，但計算很耗時</td><td>精確</td><td>近似；改進「需要黑魔法」<a class="cite" href="https://kumilz030.github.io/CMP-wiki/綜合/HF-versus-DFT" title="HF versus DFT" target="_blank" rel="noopener">1</a></td></tr></tbody></table><ul><li>兩者的目標都是從 first principles（Schrödinger 或 Dirac equation）直接解出精確結果<a class="cite" href="https://kumilz030.github.io/CMP-wiki/綜合/HF-versus-DFT" title="HF versus DFT" target="_blank" rel="noopener">1</a></li><li>post-HF 走逐步逼近的路，但總會撞上「計算資源永遠有限」這道牆；DFT 繞另一條路，可以打到靶心附近<a class="cite" href="https://kumilz030.github.io/CMP-wiki/綜合/HF-versus-DFT" title="HF versus DFT" target="_blank" rel="noopener">1</a></li></ul></div>
+  <footer><span class="src-label">Sources (CMP-wiki)</span><a class="src" href="https://kumilz030.github.io/CMP-wiki/綜合/HF-versus-DFT" target="_blank" rel="noopener"><span class="src-n">1</span>HF versus DFT</a></footer>
+</section>
+<section class="slide layout-closing" data-n="15" aria-label="Summary: Why DFT Works">
+  <header><span class="kicker">15 / 15</span><h1>Summary: Why DFT Works</h1></header>
+  <div class="key">不解 $3N$ 維的多體波函數，改解只有 3 個變數的密度與 Kohn-Sham 軌域；DFT 理論本身唯一的本質近似是 XC 泛函的選擇，此外還有 Born-Oppenheimer 與數值方法帶來的近似<a class="cite" href="https://kumilz030.github.io/CMP-wiki/邏輯鏈/HK-theorems-justify-the-Kohn-Sham-scheme" title="HK theorems justify the Kohn-Sham scheme" target="_blank" rel="noopener">1</a></div>
+  <div class="body"><ol><li>Born-Oppenheimer：凍結原子核，只剩電子在固定的 external potential 中的問題<a class="cite" href="https://kumilz030.github.io/CMP-wiki/邏輯鏈/HK-theorems-justify-the-Kohn-Sham-scheme" title="HK theorems justify the Kohn-Sham scheme" target="_blank" rel="noopener">1</a></li><li>第一 HK 定理：基態密度與 external potential 一對一，基態可觀測量都是密度的唯一泛函 $O[\rho]$<a class="cite" href="https://kumilz030.github.io/CMP-wiki/邏輯鏈/HK-theorems-justify-the-Kohn-Sham-scheme" title="HK theorems justify the Kohn-Sham scheme" target="_blank" rel="noopener">1</a></li><li>第二 HK 定理：總能量泛函在基態密度有最小值，但 $F_{HK}$ 未知<a class="cite" href="https://kumilz030.github.io/CMP-wiki/邏輯鏈/HK-theorems-justify-the-Kohn-Sham-scheme" title="HK theorems justify the Kohn-Sham scheme" target="_blank" rel="noopener">1</a></li><li>Kohn-Sham：用不交互作用的準粒子精確重現同一個密度，未知的部分全部收進 $V_{xc}$<a class="cite" href="https://kumilz030.github.io/CMP-wiki/邏輯鏈/HK-theorems-justify-the-Kohn-Sham-scheme" title="HK theorems justify the Kohn-Sham scheme" target="_blank" rel="noopener">1</a></li><li>XC 近似（LDA、GGA）：精確的 XC 泛函存在但未知，只能近似；選擇近似的 XC 泛函是唯一的本質近似<a class="cite" href="https://kumilz030.github.io/CMP-wiki/邏輯鏈/HK-theorems-justify-the-Kohn-Sham-scheme" title="HK theorems justify the Kohn-Sham scheme" target="_blank" rel="noopener">1</a></li><li>Self-consistent field：$\hat H_{KS}$ 依賴 $\rho$，所以要迭代到自洽<a class="cite" href="https://kumilz030.github.io/CMP-wiki/邏輯鏈/HK-theorems-justify-the-Kohn-Sham-scheme" title="HK theorems justify the Kohn-Sham scheme" target="_blank" rel="noopener">1</a></li></ol><ul><li>限制：只保證基態；證明針對 non-degenerate ground states；XC 泛函的誤差無法事先控制；basis set 截斷與 k-point 取樣的數值誤差可以靠 convergence testing 控制<a class="cite" href="https://kumilz030.github.io/CMP-wiki/邏輯鏈/HK-theorems-justify-the-Kohn-Sham-scheme" title="HK theorems justify the Kohn-Sham scheme" target="_blank" rel="noopener">1</a></li></ul></div>
+  <footer><span class="src-label">Sources (CMP-wiki)</span><a class="src" href="https://kumilz030.github.io/CMP-wiki/邏輯鏈/HK-theorems-justify-the-Kohn-Sham-scheme" target="_blank" rel="noopener"><span class="src-n">1</span>HK theorems justify the Kohn-Sham scheme</a></footer>
+</section>
+</div></div>
+<div id="progress"></div>
+<div id="hint">← → 換頁 · F 全螢幕</div>
+<pre id="check-result"></pre>
+<script>
+(function () {
+  const N = 15;
+  const slides = Array.from(document.querySelectorAll(".slide"));
+  const params = new URLSearchParams(location.search);
+  let cur = 0;
+
+  function fit() {
+    const s = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    document.getElementById("deck").style.transform = "scale(" + s + ")";
+  }
+  function show(i) {
+    cur = Math.max(0, Math.min(N - 1, i));
+    slides.forEach((el, k) => el.classList.toggle("active", k === cur));
+    document.getElementById("progress").style.width = ((cur + 1) / N * 100) + "%";
+    if (!params.has("slide")) history.replaceState(null, "", "#" + (cur + 1));
+  }
+  window.addEventListener("resize", fit);
+  document.addEventListener("keydown", (e) => {
+    if (["ArrowRight", "PageDown", " ", "Enter"].includes(e.key)) { e.preventDefault(); show(cur + 1); }
+    else if (["ArrowLeft", "PageUp", "Backspace"].includes(e.key)) { e.preventDefault(); show(cur - 1); }
+    else if (e.key === "Home") show(0);
+    else if (e.key === "End") show(N - 1);
+    else if (e.key === "f" || e.key === "F") {
+      if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen();
+    }
+  });
+  document.getElementById("viewport").addEventListener("click", (e) => {
+    if (e.target.closest("a")) return;
+    show(e.clientX > window.innerWidth / 2 ? cur + 1 : cur - 1);
+  });
+
+  // 關卡 9 用：?check=1 時逐頁量測溢出與數學式錯誤，結果寫進 #check-result
+  function runCheck() {
+    const report = [];
+    slides.forEach((el, k) => {
+      show(k);
+      const body = el.querySelector(".body");
+      const issues = [];
+      if (body.scrollHeight > body.clientHeight + 1) issues.push("vertical overflow " + (body.scrollHeight - body.clientHeight) + "px");
+      const box = el.getBoundingClientRect();
+      // .katex-mathml 是給螢幕閱讀器的隱藏副本，不會顯示，量測時排除
+      el.querySelectorAll(".body *:not(.katex-mathml):not(.katex-mathml *)").forEach((c) => {
+        const r = c.getBoundingClientRect();
+        if (r.width && r.right > box.right + 1) issues.push("horizontal overflow: " + (c.className || c.tagName));
+      });
+      el.querySelectorAll(".katex-display, .math-block").forEach((m) => {
+        if (m.scrollWidth > m.clientWidth + 1) issues.push("wide math " + (m.scrollWidth - m.clientWidth) + "px");
+      });
+      const kerr = el.querySelectorAll(".katex-error").length;
+      if (kerr) issues.push(kerr + " KaTeX error(s)");
+      const unrendered = (body.textContent.match(/\$/g) || []).length;
+      if (unrendered) issues.push("unrendered $ x" + unrendered);
+      report.push({ slide: k + 1, issues: Array.from(new Set(issues)) });
+    });
+    document.getElementById("check-result").textContent = JSON.stringify({ count: N, katex: typeof katex !== "undefined", slides: report });
+  }
+
+  function start() {
+    fit();
+    if (window.renderMathInElement) {
+      renderMathInElement(document.getElementById("deck"), {
+        delimiters: [{ left: "$$", right: "$$", display: true }, { left: "$", right: "$", display: false }],
+        throwOnError: false
+      });
+    }
+    // 版面修正（不改字）：太寬的數學式逐步縮小字級，最小 14px
+    slides.forEach((el) => {
+      el.classList.add("measure");
+      el.querySelectorAll(".math-block").forEach((m) => {
+        let size = parseFloat(getComputedStyle(m).fontSize);
+        const wide = () => [m, ...m.querySelectorAll(".katex-display")].some((x) => x.scrollWidth > x.clientWidth + 1);
+        while (wide() && size > 14) { size -= 1; m.style.fontSize = size + "px"; }
+      });
+      el.classList.remove("measure");
+    });
+    const want = parseInt(params.get("slide") || location.hash.slice(1) || "1", 10);
+    show(isNaN(want) ? 0 : want - 1);
+    if (params.has("check")) runCheck();
+    if (params.has("slide")) { document.getElementById("hint").style.display = "none"; }
+  }
+  if (document.readyState === "complete") start(); else window.addEventListener("load", start);
+})();
+</script>
+</body>
+</html>

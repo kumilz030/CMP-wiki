@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<!-- 由 scripts/slides/render_deck.py 產生；內容只來自 CMP-wiki。配色依 DESIGN.md。 -->
+<style>
+:root {
+  --bg: #fbfaf7; --panel: #ffffff; --line: #e6e4df; --muted: #8f8a82;
+  --text: #3f3d39; --dark: #1f1e1c; --blue: #2f5d8a; --orange: #c0793a;
+  --blue-soft: rgba(47, 93, 138, 0.08); --orange-soft: rgba(192, 121, 58, 0.10);
+  --stage: #2b2f36;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--stage); }
+body { font-family: "Noto Sans TC", system-ui, sans-serif; color: var(--text); overflow: hidden; }
+#viewport { position: fixed; inset: 0; display: grid; place-items: center; }
+#deck { width: 1280px; height: 720px; position: relative; transform-origin: center center; }
+.slide {
+  position: absolute; inset: 0; background: var(--bg); padding: 48px 72px 0;
+  display: none; flex-direction: column; border-radius: 6px; overflow: hidden;
+}
+.slide.active, .slide.measure { display: flex; }
+.slide header { flex: 0 0 auto; }
+.kicker { font: 500 15px/1 "JetBrains Mono", monospace; color: var(--orange); letter-spacing: .08em; }
+.slide h1 { margin: 10px 0 0; font-size: 40px; line-height: 1.2; color: var(--dark); font-weight: 700; }
+.key {
+  margin-top: 20px; padding: 14px 20px; border-left: 5px solid var(--blue);
+  background: var(--blue-soft); font-size: 24px; line-height: 1.5; color: var(--dark); border-radius: 0 6px 6px 0;
+}
+.body { flex: 1 1 auto; min-height: 0; overflow: hidden; padding: 22px 0 8px; font-size: 24px; line-height: 1.6; }
+.body ul, .body ol { margin: 6px 0; padding-left: 1.3em; }
+.body li { margin: 10px 0; }
+.body li::marker { color: var(--blue); }
+.body p { margin: 8px 0; }
+.math-block { margin: 12px 0; padding: 10px 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; font-size: 22px; overflow: hidden; }
+.math-block .katex-display { margin: 0; }
+code { font-family: "JetBrains Mono", monospace; font-size: .9em; background: var(--line); padding: 0 .3em; border-radius: 3px; }
+strong { color: var(--dark); }
+.cite {
+  display: inline-block; margin-left: 3px; min-width: 16px; padding: 0 4px; font: 600 12px/16px "JetBrains Mono", monospace;
+  vertical-align: super; text-align: center; color: var(--blue); background: var(--blue-soft); border-radius: 8px; text-decoration: none;
+}
+.cite:hover { background: var(--orange-soft); color: var(--orange); }
+.flow { display: flex; align-items: center; gap: 10px; margin: 14px 0 4px; flex-wrap: nowrap; }
+.flow .box {
+  flex: 1 1 0; min-width: 0; padding: 14px 12px; text-align: center; background: var(--panel);
+  border: 2px solid var(--blue); border-radius: 10px; font-size: 21px; line-height: 1.35; color: var(--dark);
+}
+.flow .box:last-child { border-color: var(--orange); background: var(--orange-soft); }
+.flow .arrow { flex: 0 0 auto; color: var(--orange); font-size: 26px; font-weight: 700; }
+.flow-cite { text-align: right; margin-bottom: 6px; }
+table.compare { width: 100%; border-collapse: collapse; font-size: 20px; line-height: 1.45; margin: 8px 0; background: var(--panel); }
+table.compare th { background: var(--blue); color: #fff; text-align: left; padding: 8px 12px; font-weight: 500; }
+table.compare td { border-bottom: 1px solid var(--line); padding: 8px 12px; vertical-align: top; }
+table.compare tr td:first-child { color: var(--dark); font-weight: 500; }
+.slide footer {
+  flex: 0 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 0; padding: 10px 0 18px;
+  border-top: 1px solid var(--line); font-size: 13px; color: var(--muted);
+}
+.src-label { margin-right: 10px; }
+.src { display: inline-flex; align-items: center; gap: 5px; margin-right: 14px; color: var(--blue); text-decoration: none; }
+.src:hover { color: var(--orange); }
+.src-n { min-width: 16px; padding: 0 4px; font: 600 11px/16px "JetBrains Mono", monospace; text-align: center; background: var(--blue-soft); border-radius: 8px; }
+/* title slide */
+.layout-title { justify-content: center; background: linear-gradient(135deg, #fbfaf7 0%, #eef2f7 100%); }
+.layout-title header { margin-top: auto; }
+.layout-title h1 { font-size: 54px; max-width: 980px; }
+.layout-title .key { font-size: 26px; max-width: 980px; border-left-color: var(--orange); background: var(--orange-soft); }
+.layout-title .body { flex: 0 0 auto; font-size: 20px; color: var(--muted); }
+.layout-title .math-block { font-size: 26px; }
+.layout-title .body ul { list-style: none; padding: 0; }
+.layout-title footer { margin-top: auto; }
+/* closing */
+.layout-closing ol { counter-reset: s; list-style: none; padding: 0; }
+.layout-closing ol li { counter-increment: s; position: relative; padding-left: 46px; margin: 9px 0; font-size: 22px; line-height: 1.5; }
+.layout-closing ol li::before {
+  content: counter(s); position: absolute; left: 0; top: 1px; width: 30px; height: 30px; border-radius: 50%;
+  background: var(--blue); color: #fff; font: 700 16px/30px "JetBrains Mono", monospace; text-align: center;
+}
+/* chrome */
+#progress { position: fixed; left: 0; bottom: 0; height: 4px; background: var(--orange); transition: width .2s; }
+#hint { position: fixed; right: 14px; bottom: 10px; color: #9aa3ad; font-size: 12px; font-family: system-ui, sans-serif; }
+#check-result { display: none; }
+@media print {
+  html, body { overflow: visible; background: #fff; }
+  #viewport { position: static; display: block; }
+  #deck { transform: none !important; width: auto; height: auto; }
+  .slide { display: flex !important; position: relative; width: 1280px; height: 720px; page-break-after: always; }
+  #progress, #hint { display: none; }
+}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="deck">
+{{SLIDES}}
+</div></div>
+<div id="progress"></div>
+<div id="hint">← → 換頁 · F 全螢幕</div>
+<pre id="check-result"></pre>
+<script>
+(function () {
+  const N = {{COUNT}};
+  const slides = Array.from(document.querySelectorAll(".slide"));
+  const params = new URLSearchParams(location.search);
+  let cur = 0;
+
+  function fit() {
+    const s = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    document.getElementById("deck").style.transform = "scale(" + s + ")";
+  }
+  function show(i) {
+    cur = Math.max(0, Math.min(N - 1, i));
+    slides.forEach((el, k) => el.classList.toggle("active", k === cur));
+    document.getElementById("progress").style.width = ((cur + 1) / N * 100) + "%";
+    if (!params.has("slide")) history.replaceState(null, "", "#" + (cur + 1));
+  }
+  window.addEventListener("resize", fit);
+  document.addEventListener("keydown", (e) => {
+    if (["ArrowRight", "PageDown", " ", "Enter"].includes(e.key)) { e.preventDefault(); show(cur + 1); }
+    else if (["ArrowLeft", "PageUp", "Backspace"].includes(e.key)) { e.preventDefault(); show(cur - 1); }
+    else if (e.key === "Home") show(0);
+    else if (e.key === "End") show(N - 1);
+    else if (e.key === "f" || e.key === "F") {
+      if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen();
+    }
+  });
+  document.getElementById("viewport").addEventListener("click", (e) => {
+    if (e.target.closest("a")) return;
+    show(e.clientX > window.innerWidth / 2 ? cur + 1 : cur - 1);
+  });
+
+  // 關卡 9 用：?check=1 時逐頁量測溢出與數學式錯誤，結果寫進 #check-result
+  function runCheck() {
+    const report = [];
+    slides.forEach((el, k) => {
+      show(k);
+      const body = el.querySelector(".body");
+      const issues = [];
+      if (body.scrollHeight > body.clientHeight + 1) issues.push("vertical overflow " + (body.scrollHeight - body.clientHeight) + "px");
+      const box = el.getBoundingClientRect();
+      // .katex-mathml 是給螢幕閱讀器的隱藏副本，不會顯示，量測時排除
+      el.querySelectorAll(".body *:not(.katex-mathml):not(.katex-mathml *)").forEach((c) => {
+        const r = c.getBoundingClientRect();
+        if (r.width && r.right > box.right + 1) issues.push("horizontal overflow: " + (c.className || c.tagName));
+      });
+      el.querySelectorAll(".katex-display, .math-block").forEach((m) => {
+        if (m.scrollWidth > m.clientWidth + 1) issues.push("wide math " + (m.scrollWidth - m.clientWidth) + "px");
+      });
+      const kerr = el.querySelectorAll(".katex-error").length;
+      if (kerr) issues.push(kerr + " KaTeX error(s)");
+      const unrendered = (body.textContent.match(/\$/g) || []).length;
+      if (unrendered) issues.push("unrendered $ x" + unrendered);
+      report.push({ slide: k + 1, issues: Array.from(new Set(issues)) });
+    });
+    document.getElementById("check-result").textContent = JSON.stringify({ count: N, katex: typeof katex !== "undefined", slides: report });
+  }
+
+  function start() {
+    fit();
+    if (window.renderMathInElement) {
+      renderMathInElement(document.getElementById("deck"), {
+        delimiters: [{ left: "$$", right: "$$", display: true }, { left: "$", right: "$", display: false }],
+        throwOnError: false
+      });
+    }
+    // 版面修正（不改字）：太寬的數學式逐步縮小字級，最小 14px
+    slides.forEach((el) => {
+      el.classList.add("measure");
+      el.querySelectorAll(".math-block").forEach((m) => {
+        let size = parseFloat(getComputedStyle(m).fontSize);
+        const wide = () => [m, ...m.querySelectorAll(".katex-display")].some((x) => x.scrollWidth > x.clientWidth + 1);
+        while (wide() && size > 14) { size -= 1; m.style.fontSize = size + "px"; }
+      });
+      el.classList.remove("measure");
+    });
+    const want = parseInt(params.get("slide") || location.hash.slice(1) || "1", 10);
+    show(isNaN(want) ? 0 : want - 1);
+    if (params.has("check")) runCheck();
+    if (params.has("slide")) { document.getElementById("hint").style.display = "none"; }
+  }
+  if (document.readyState === "complete") start(); else window.addEventListener("load", start);
+})();
+</script>
+</body>
+</html>
