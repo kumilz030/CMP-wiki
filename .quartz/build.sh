@@ -28,4 +28,14 @@ if [ "${1:-}" = "--serve" ]; then
   npx quartz build -o "$HERE/public" --serve
 else
   npx quartz build -o "$HERE/public"
+  # 教學簡報：slides/topic-<slug>/deck.html → public/slides/<slug>/index.html
+  # （只放渲染好的簡報；cards、drafts、report 不上網站）
+  for deck in "$ROOT"/slides/topic-*/deck.html; do
+    [ -f "$deck" ] || continue
+    slug="$(basename "$(dirname "$deck")")"
+    slug="${slug#topic-}"
+    mkdir -p "$HERE/public/slides/$slug"
+    cp "$deck" "$HERE/public/slides/$slug/index.html"
+    echo "slides: /slides/$slug/"
+  done
 fi

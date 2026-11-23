@@ -10,3 +10,4 @@
 ## [2026-11-16] publish | M3：建立公開 repo kumilz030/CMP-wiki、啟用 GitHub Pages（GitHub Actions）、第一次部署。push 前把 5 個 commit 的作者 email 改成 GitHub noreply（使用者同意的例外），commit 雜湊因此改變，舊→新：96a4abd→407be8d、3072775→894ee42、7e6639a→19b7edc、566133c→b9d9233、c4acf06→e9ad8d0（commit 訊息與上面 log 中的「起點」仍是舊雜湊）
 ## [2026-11-16] lint | knowledge base test questions 19/19 通過；lint 0 錯誤；⚠️待查證 5
 ## [2026-11-23] setup | topic-slides workflow（依「10 把你的工作拆成 AI 能做的流程」p.41–47 的 Graph）：`.agents/workflows/topic-slides.md`、`/topic-slides` skill、`scripts/slides/`（coverage_check、make_cards、check_drafts、render_deck、render_check）；產出 `slides/topic-dft-basics/deck.html`（15 頁），忠實度與渲染檢查全過，AI 審查 3 輪後通過，紀錄見該資料夾的 report.md
+## [2026-11-23] publish | DFT 基礎概念簡報上網站：build.sh 把 slides/topic-*/deck.html 複製到 /slides/<slug>/；index 加「Slides」區；簡報頁尾加回 wiki 的連結與課程出處；17 個 wiki 連結在建置結果中全部存在

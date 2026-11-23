@@ -8,6 +8,9 @@ title: Home
 
 %% 給 AI：回答問題前先讀這份。依單元分類，每頁一行摘要。健檢用的題組見 knowledge base test questions。（Obsidian 註解，網站上不顯示） %%
 
+## Slides
+- [DFT basics: from many electrons to one density](https://kumilz030.github.io/CMP-wiki/slides/dft-basics/)（DFT 基礎概念教學簡報，15 頁）：只用本 wiki 的內容製作；每頁頁尾連回引用的 wiki 頁
+
 ## Synthesis
 - [[key equations]]（方程式總表）：各單元的重要式子、成立條件與頁面
 - [[symbols]]（符號對照表）：全庫統一符號與單位制
